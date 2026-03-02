@@ -1,6 +1,6 @@
 # WM Sprinkler
 
-WM Sprinkler is a firmware for a ESP32-based irrigation controller. The firmware provides a local web panel, saves schedules in the transmission, and allows for shared or automatic zone control.
+WM Sprinkler is a firmware for a proprietary ESP32-based irrigation controller. The firmware provides a local web panel, saves schedules in the transmission, and allows for shared or automatic zone control.
 
 ## What to flash to a clean ESP32
 
@@ -60,7 +60,8 @@ Firmware 0x10000.bin \
 ## First boot
 
 After the first boot, the device does not yet have a Wi-Fi network available, it switches to AP mode and an additional local Wi-Fi configuration panel. The AP password is 12345678.
-After connecting to the network, access the device panel, allowing you to configure the IP device and install:
+
+After connecting to the network, access the device panel, allowing configuration and installation of the IP device:
 
 - zone name
 - schedule
@@ -69,4 +70,6 @@ After connecting to the network, access the device panel, allowing you to config
 ## Important
 
 - always use files from the same build
-- when updating OTA, first upload `firmware.bin`, then `littlefs.bin`
+- for OTA updates, upload `firmware.bin` first, then `littlefs.bin`
+
+Cloud access: www.wmsprinkler.pl
