@@ -72,4 +72,4 @@ After connecting to the network, access the device panel, allowing configuration
 - always use files from the same build
 - for OTA updates, upload `firmware.bin` first, then `littlefs.bin`
 
-Cloud access: www.wmsprinkler.pl
+Cloud access: https://wmsprinkler.pl
