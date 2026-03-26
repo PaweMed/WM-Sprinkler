@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WM Sprinkler TFT - Animacja menu</title>
+  <style>
+    :root {
+      --bg: #030812;
+      --card: #081628;
+      --card2: #0c2238;
+      --stroke: #146084;
+      --stroke-strong: #10cdd9;
+      --text: #ebf4ff;
+      --muted: #7ca8be;
+      --good: #42d890;
+      --warn: #f3a85c;
+      --top1: #06162e;
+      --top2: #020a1a;
+      --dim1: #040c1a;
+      --dim2: #01050d;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 320px;
+      height: 240px;
+      overflow: hidden;
+      background: #020916;
+      font-family: "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+    .viewport {
+      width: 320px;
+      height: 240px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #17324d;
+      border-radius: 14px;
+      background: var(--bg);
+    }
+    .track {
+      width: 1600px;
+      height: 240px;
+      display: flex;
+      animation: slideScreens 12s linear infinite;
+      will-change: transform;
+    }
+    .screen {
+      width: 320px;
+      height: 240px;
+      flex: 0 0 320px;
+      position: relative;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .top {
+      height: 44px;
+      background: linear-gradient(180deg, var(--top1), var(--top2));
+      border-bottom: 2px solid var(--stroke-strong);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      font-weight: 700;
+      font-size: 19px;
+    }
+    .logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px rgba(79,216,191,.45));
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 6px 0;
+    }
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 12px; }
+    .tile {
+      height: 48px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 32px;
+      line-height: 1;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+    }
+    .tile.active { color: var(--good); background: var(--card2); }
+    .focus {
+      position: absolute;
+      width: 72px;
+      height: 52px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 14px rgba(16,205,217,.75);
+      pointer-events: none;
+      left: 166px;
+      top: 74px;
+      animation: homeFocus 2.4s ease-in-out infinite;
+      will-change: left, top, box-shadow;
+    }
+    .statusbar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 8px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 12px;
+      gap: 7px;
+    }
+    .value-warn { color: var(--warn); font-weight: 700; }
+    .line-card {
+      height: 44px;
+      margin: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .line-card strong { color: var(--text); font-size: 30px; line-height: 1; }
+    .line-card.small strong { font-size: 22px; }
+    .manual-focus {
+      position: absolute;
+      left: 14px;
+      width: 292px;
+      height: 48px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 12px rgba(16,205,217,.7);
+      pointer-events: none;
+      top: 170px;
+      animation: manualFocus 2.8s ease-in-out infinite;
+      will-change: top;
+    }
+    .btn {
+      margin: 8px 16px 6px;
+      height: 52px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, #0c6e95, #094f70);
+      display: grid;
+      place-items: center;
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 1px;
+      animation: btnPulse 1.8s ease-in-out infinite;
+    }
+    .btn.stop {
+      background: linear-gradient(180deg, #6d1a2d, #4a1020);
+    }
+    .hint { text-align: center; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .row {
+      margin: 8px 16px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 7px;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--muted);
+    }
+    .row b { color: var(--text); }
+    .row .ok { color: var(--good); font-weight: 700; }
+    .row .temp { color: #6dd6ff; font-weight: 700; }
+    .row .neutral { color: var(--text); font-weight: 700; }
+    .set-box {
+      margin: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      padding: 8px 12px;
+      height: 58px;
+      position: relative;
+    }
+    .set-label { color: var(--muted); font-size: 13px; }
+    .set-value { position: absolute; right: 12px; top: 8px; font-weight: 700; }
+    .slider {
+      height: 8px;
+      border-radius: 4px;
+      background: #0d243a;
+      margin-top: 10px;
+      overflow: visible;
+    }
+    .slider > span {
+      display: block;
+      width: 70%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--stroke-strong);
+      position: relative;
+      animation: sliderFill 3s ease-in-out infinite;
+      will-change: width;
+    }
+    .slider > span::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #d6f5ff;
+      border: 1px solid #fff;
+      position: absolute;
+      right: -7px;
+      top: -3px;
+    }
+    .timeout { display: flex; gap: 8px; position: absolute; right: 10px; bottom: 8px; }
+    .timeout span {
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: #0a1d31;
+    }
+    .timeout span.sel { border-color: var(--stroke-strong); background: #0f3950; }
+    .set-focus {
+      position: absolute;
+      left: 14px;
+      width: 292px;
+      height: 62px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 12px rgba(16,205,217,.7);
+      pointer-events: none;
+      top: 74px;
+      animation: setFocus 2.8s ease-in-out infinite;
+      will-change: top;
+    }
+    .dim {
+      background: linear-gradient(180deg, var(--dim1), var(--dim2));
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dim img {
+      width: 210px;
+      height: 210px;
+      object-fit: contain;
+      opacity: .85;
+      filter: drop-shadow(0 0 18px rgba(60,153,220,.35));
+      animation: dimLogo 2.8s ease-in-out infinite;
+    }
+    @keyframes homeFocus {
+      0%, 18%   { left: 166px; top: 74px; box-shadow: 0 0 14px rgba(16,205,217,.75); }
+      25%, 43%  { left: 92px;  top: 74px; box-shadow: 0 0 12px rgba(16,205,217,.65); }
+      50%, 68%  { left: 18px;  top: 126px; box-shadow: 0 0 14px rgba(16,205,217,.75); }
+      75%, 100% { left: 166px; top: 126px; box-shadow: 0 0 16px rgba(16,205,217,.85); }
+    }
+    @keyframes manualFocus {
+      0%, 30%   { top: 68px; }
+      40%, 65%  { top: 120px; }
+      75%, 100% { top: 170px; }
+    }
+    @keyframes btnPulse {
+      0%, 100% { filter: brightness(1); }
+      50%      { filter: brightness(1.16); }
+    }
+    @keyframes sliderFill {
+      0%, 100% { width: 62%; }
+      50%      { width: 78%; }
+    }
+    @keyframes setFocus {
+      0%, 42%  { top: 74px; }
+      58%, 100%{ top: 142px; }
+    }
+    @keyframes dimLogo {
+      0%, 100% { opacity: .78; transform: scale(0.98); }
+      50%      { opacity: .96; transform: scale(1.0); }
+    }
+    @keyframes slideScreens {
+      0%, 14%   { transform: translateX(0); }
+      20%, 34%  { transform: translateX(-320px); }
+      40%, 54%  { transform: translateX(-640px); }
+      60%, 74%  { transform: translateX(-960px); }
+      80%, 94%  { transform: translateX(-1280px); }
+      100%      { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport">
+    <div class="track">
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Panel Główny</div>
+        <div class="tiles">
+          <div class="tile">1</div><div class="tile">2</div><div class="tile active" id="homeZoneTile">3</div><div class="tile">4</div>
+          <div class="tile">5</div><div class="tile">6</div><div class="tile">7</div><div class="tile">8</div>
+        </div>
+        <div class="focus"></div>
+        <div class="statusbar"><b>Stan:</b><span class="value-warn" id="homeState">Sekcja 3</span></div>
+      </div>
+
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Podlewanie Ręczne</div>
+        <div class="line-card"><span>Sekcja</span><strong id="manualZone">3</strong></div>
+        <div class="line-card small"><span id="manualLabel">Pozostało</span><strong id="manualTime">15:00</strong></div>
+        <div class="btn stop" id="manualBtn">STOP</div>
+        <div class="manual-focus"></div>
+      </div>
+
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Status Systemu</div>
+        <div class="row"><b>WiFi:</b> <span class="ok">Połączono</span></div>
+        <div class="row"><b>Cloud:</b> <span class="ok">Połączono</span></div>
+        <div class="row"><b>Temp:</b> <span class="temp">23.1 C</span></div>
+        <div class="row"><b>Nawadnianie:</b> <span class="neutral" id="statusWatering">100 %</span></div>
+      </div>
+
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Ustawienia</div>
+        <div class="set-box">
+          <div class="set-label">Jasność</div>
+          <div class="set-value">75%</div>
+          <div class="slider"><span></span></div>
+        </div>
+        <div class="set-box">
+          <div class="set-label">Auto przygaszanie</div>
+          <div class="timeout"><span>1 min</span><span class="sel">3 min</span><span>5 min</span></div>
+        </div>
+        <div class="set-focus"></div>
+        <div class="hint">Po czasie ekran schodzi do 15%, nie wyłącza się</div>
+      </div>
+
+      <div class="screen">
+        <div class="dim">
+          <img src="data/assets/logo-optimized-BnrUG8xa.png" alt="duże logo" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      const state = {
+        zone: 3,
+        totalSec: 15 * 60,
+        startedAtMs: Date.now(),
+        running: true
+      };
+
+      const elHomeState = document.getElementById("homeState");
+      const elManualZone = document.getElementById("manualZone");
+      const elManualLabel = document.getElementById("manualLabel");
+      const elManualTime = document.getElementById("manualTime");
+      const elManualBtn = document.getElementById("manualBtn");
+      const elStatusWatering = document.getElementById("statusWatering");
+
+      if (elManualZone) elManualZone.textContent = String(state.zone);
+
+      function formatTime(sec) {
+        const s = Math.max(0, sec | 0);
+        const mm = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      function remainingSeconds(nowMs) {
+        if (!state.running) return 0;
+        const elapsed = Math.floor((nowMs - state.startedAtMs) / 1000);
+        const rem = state.totalSec - elapsed;
+        if (rem <= 0) {
+          state.running = false;
+          return 0;
+        }
+        return rem;
+      }
+
+      function render() {
+        const rem = remainingSeconds(Date.now());
+        if (state.running) {
+          elHomeState.textContent = "Sekcja " + String(state.zone);
+          elManualLabel.textContent = "Pozostało";
+          elManualTime.textContent = formatTime(rem);
+          elManualBtn.textContent = "STOP";
+          elManualBtn.classList.add("stop");
+          elStatusWatering.textContent = "100 %";
+        } else {
+          elHomeState.textContent = "Gotowy";
+          elManualLabel.textContent = "Czas";
+          elManualTime.textContent = "00:00";
+          elManualBtn.textContent = "START";
+          elManualBtn.classList.remove("stop");
+          elStatusWatering.textContent = "0 %";
+        }
+      }
+
+      render();
+      setInterval(render, 1000);
+    })();
+  </script>
+</body>
+</html>

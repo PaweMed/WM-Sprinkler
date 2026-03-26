@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="WM Sprinkler - profesjonalny system inteligentnego nawadniania rozwijany przez PaweMed." />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <title>WM Sprinkler | Inteligentne Nawadnianie</title>
+  <style>
+    :root {
+      --bg-a: #3b82f6;
+      --bg-b: #34d399;
+      --ink: #0f172a;
+      --muted: #475569;
+      --card: #ffffff;
+      --line: #dbeafe;
+      --accent: #2563eb;
+      --accent-2: #059669;
+      --nav-w: 250px;
+      --top-h: 104px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-a), var(--bg-b));
+      overflow-x: hidden;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--nav-w) 1fr;
+      grid-template-rows: var(--top-h) 1fr;
+      grid-template-areas:
+        "top top"
+        "nav main";
+    }
+
+    .topbar {
+      grid-area: top;
+      position: relative;
+      top: auto;
+      z-index: 20;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.88);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 88px;
+      height: 88px;
+      border-radius: 11px;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+      background: #fff;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-sub {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .login-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      font-weight: 700;
+      letter-spacing: 0.15px;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.32);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.36);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar {
+      grid-area: nav;
+      position: fixed;
+      left: 0;
+      width: var(--nav-w);
+      top: var(--menu-top, var(--top-h));
+      height: calc(100vh - var(--menu-top, var(--top-h)));
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.2);
+      border-right: 1px solid rgba(255, 255, 255, 0.32);
+      padding: 22px 16px;
+      backdrop-filter: blur(8px);
+      z-index: 18;
+    }
+
+    .menu-label {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #eff6ff;
+      opacity: 0.9;
+    }
+
+    .menu {
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu a {
+      display: block;
+      text-decoration: none;
+      color: #eff6ff;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid transparent;
+      transition: background .18s ease, border-color .18s ease, box-shadow .22s ease, transform .22s ease, color .18s ease;
+    }
+
+    .menu a:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .menu a.is-active {
+      background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(219,234,254,0.96));
+      color: #1e3a8a;
+      border-color: rgba(255, 255, 255, 0.98);
+      box-shadow:
+        0 9px 18px rgba(15, 23, 42, 0.2),
+        0 2px 6px rgba(255, 255, 255, 0.65) inset;
+      transform: translateY(-1px);
+    }
+
+    .menu a.is-animating {
+      animation: chipGlowPulse .72s ease;
+    }
+
+    @keyframes chipGlowPulse {
+      0% {
+        box-shadow:
+          0 0 0 rgba(59,130,246,0),
+          0 2px 5px rgba(15,23,42,0.08);
+      }
+      45% {
+        box-shadow:
+          0 0 16px rgba(147,197,253,0.85),
+          0 10px 20px rgba(15,23,42,0.26);
+      }
+      100% {
+        box-shadow:
+          0 9px 18px rgba(15, 23, 42, 0.2),
+          0 2px 6px rgba(255, 255, 255, 0.65) inset;
+      }
+    }
+
+    .sidebar-watermark {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0.95;
+    }
+
+    .sidebar-watermark img {
+      width: min(100%, 170px);
+      height: auto;
+      filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.24));
+    }
+
+    main {
+      grid-area: main;
+      padding: 22px;
+    }
+
+    .wrap {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .wrap > [id] {
+      scroll-margin-top: calc(var(--top-h) + 20px);
+    }
+
+    .hero {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 26px;
+      border: 1px solid rgba(37, 99, 235, 0.16);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+      max-width: 100%;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 62ch;
+      line-height: 1.6;
+    }
+
+    .hero-badges {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hero-badges span {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e3a8a;
+      background: #dbeafe;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+
+    .hero-visual {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 22%, rgba(255,255,255,0.25), transparent 34%),
+        radial-gradient(circle at 82% 16%, rgba(147,197,253,0.22), transparent 30%),
+        linear-gradient(160deg, #0f274a, #1d4f86 65%, #0f3a66);
+      min-height: 220px;
+      aspect-ratio: 3 / 4;
+      border: 1px solid rgba(148, 163, 184, 0.36);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.14),
+        0 14px 30px rgba(15,23,42,0.26);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(2,6,23,0.3);
+    }
+
+    .article {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px 20px;
+      border: 1px solid rgba(37, 99, 235, 0.14);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      max-width: 100%;
+    }
+
+    .article h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+
+    .article p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 15px;
+      max-width: 78ch;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .article a {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .dev-article,
+    .cap-article {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 88% -18%, rgba(147,197,253,0.24), transparent 36%),
+        radial-gradient(circle at -10% 118%, rgba(52,211,153,0.2), transparent 44%),
+        #ffffff;
+    }
+
+    .cap-article {
+      background:
+        radial-gradient(circle at 90% -16%, rgba(191,219,254,0.28), transparent 38%),
+        radial-gradient(circle at -8% 112%, rgba(167,243,208,0.24), transparent 46%),
+        #ffffff;
+    }
+
+    .dev-lead,
+    .cap-lead {
+      margin-top: 10px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #334155;
+      max-width: 86ch;
+    }
+
+    .dev-hero,
+    .cap-hero {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .dev-hero-copy,
+    .cap-hero-copy,
+    .dev-hero-visual,
+    .cap-hero-visual {
+      border-radius: 14px;
+      border: 1px solid rgba(59,130,246,0.2);
+      box-shadow: 0 10px 22px rgba(15,23,42,0.12);
+    }
+
+    .dev-hero-copy,
+    .cap-hero-copy {
+      padding: 14px;
+      background: linear-gradient(165deg, rgba(239,246,255,0.98), rgba(240,253,250,0.96));
+    }
+
+    .dev-hero-copy h3,
+    .cap-hero-copy h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      color: #0f172a;
+    }
+
+    .dev-hero-copy p,
+    .cap-hero-copy p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #475569;
+    }
+
+    .dev-hero-visual,
+    .cap-hero-visual {
+      position: relative;
+      overflow: hidden;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
+      text-align: left;
+      min-height: 206px;
+      background-size: cover;
+      background-position: center;
+      isolation: isolate;
+    }
+
+    .dev-hero-visual::before,
+    .cap-hero-visual::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(7,12,24,0.12) 0%, rgba(7,12,24,0.52) 62%, rgba(7,12,24,0.74) 100%),
+        radial-gradient(circle at 84% 14%, rgba(255,255,255,0.22), transparent 36%),
+        radial-gradient(circle at 16% 18%, rgba(59,130,246,0.16), transparent 34%);
+      z-index: 0;
+    }
+
+    .dev-hero-visual::after,
+    .cap-hero-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .zalozenia-visual {
+      background-image: url("/landing/images/zalozenia-smart-garden-tech.jpg");
+      background-position: center 44%;
+    }
+
+    .mozliwosci-visual {
+      background-image: url("/landing/images/mozliwosci-sprinklers-garden.jpg");
+      background-position: center 54%;
+    }
+
+    .rozwoj-visual {
+      background-image: url("/landing/images/rozwoj-irrigation-mist.jpg");
+      background-position: center 52%;
+    }
+
+    .visual-chip {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #f8fafc;
+      background: rgba(15,23,42,0.48);
+      border: 1px solid rgba(255,255,255,0.42);
+      box-shadow: 0 6px 14px rgba(2,6,23,0.26);
+    }
+
+    .dev-hero-visual span,
+    .cap-hero-visual span {
+      position: relative;
+      z-index: 2;
+      margin-top: auto;
+      max-width: 100%;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.96);
+      background: rgba(15,23,42,0.42);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 10px;
+      padding: 6px 8px;
+      text-shadow: 0 2px 6px rgba(2,6,23,0.3);
+    }
+
+    .dev-grid,
+    .cap-grid {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dev-card,
+    .cap-card {
+      background: rgba(248,250,252,0.9);
+      border: 1px solid rgba(148,163,184,0.26);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.08);
+      min-width: 0;
+    }
+
+    .dev-card h3,
+    .cap-card h3 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dev-card h3 .icon,
+    .cap-card h3 .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #dbeafe, #dcfce7);
+      border: 1px solid rgba(59,130,246,0.24);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .dev-card p,
+    .cap-card p {
+      margin: 8px 0 0;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.58;
+      max-width: none;
+    }
+
+    .dev-card ul,
+    .cap-card ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .dev-card li + li,
+    .cap-card li + li {
+      margin-top: 3px;
+    }
+
+    .dev-card .dev-emphasis,
+    .cap-card .dev-emphasis {
+      margin-top: 8px;
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+
+    .dev-roadmap {
+      margin-top: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(59,130,246,0.22);
+      background: linear-gradient(180deg, rgba(239,246,255,0.9), rgba(241,245,249,0.94));
+      padding: 14px;
+      box-shadow: 0 10px 22px rgba(15,23,42,0.09);
+    }
+
+    .dev-roadmap h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .dev-roadmap > p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      color: #475569;
+    }
+
+    .roadmap-list {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .roadmap-item {
+      display: grid;
+      grid-template-columns: 116px 1fr;
+      gap: 12px;
+      align-items: start;
+      border-top: 1px solid rgba(148,163,184,0.34);
+      padding-top: 10px;
+    }
+
+    .roadmap-item:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .roadmap-year {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #1e3a8a;
+      background: #dbeafe;
+      border: 1px solid #bfdbfe;
+    }
+
+    .roadmap-copy h4 {
+      margin: 2px 0 0;
+      font-size: 15px;
+      color: #0f172a;
+    }
+
+    .roadmap-copy ul {
+      margin: 7px 0 0;
+      padding-left: 17px;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .roadmap-copy li + li {
+      margin-top: 2px;
+    }
+
+    .lang-switcher {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .lang-trigger {
+      width: 36px;
+      height: 30px;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      background: linear-gradient(180deg, #ffffff, #eff6ff);
+      color: #0f172a;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.15);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .lang-trigger:hover,
+    .lang-trigger:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(37, 99, 235, 0.55);
+      background: linear-gradient(180deg, #ffffff, #dbeafe);
+      outline: none;
+    }
+
+    .lang-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+      z-index: 40;
+    }
+
+    .lang-switcher.is-open .lang-menu {
+      display: inline-flex;
+    }
+
+    .lang-option {
+      width: 34px;
+      height: 24px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .14s ease, background .14s ease, border-color .14s ease;
+    }
+
+    .lang-option:hover,
+    .lang-option:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.22);
+      outline: none;
+    }
+
+    .lang-option.is-active {
+      border-color: rgba(147, 197, 253, 1);
+      background: rgba(37, 99, 235, 0.68);
+    }
+
+    .footer-note {
+      padding: 12px 4px 2px;
+      text-align: right;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 6px rgba(0,0,0,.2);
+    }
+
+    @media (max-width: 960px) {
+      :root {
+        --top-h: 72px;
+      }
+
+      .app {
+        display: block;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        padding: 8px 10px;
+        gap: 8px;
+        min-height: var(--top-h);
+        position: relative;
+        top: auto;
+        z-index: 30;
+      }
+
+      .brand {
+        flex: 1;
+        gap: 8px;
+      }
+
+      .brand img {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+      }
+
+      .brand-title {
+        font-size: 16px;
+        letter-spacing: 0.1px;
+      }
+
+      .brand-sub {
+        display: none;
+      }
+
+      .login-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+        border-radius: 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        width: auto;
+        top: var(--menu-top, var(--top-h));
+        z-index: 25;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.32);
+        padding: 6px 10px 8px;
+        background: rgba(59, 130, 246, 0.92);
+        backdrop-filter: none;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+      }
+
+      .menu-label { display: none; }
+      .sidebar-watermark { display: none; }
+
+      .menu {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 6px 6px 8px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        background: rgba(59, 130, 246, 0.35);
+        border: 1px solid rgba(191, 219, 254, 0.4);
+        border-radius: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
+
+      .menu a {
+        text-align: center;
+        font-size: 12px;
+        padding: 8px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+        min-width: 102px;
+        max-width: 132px;
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      main { padding: calc(var(--mobile-menu-h, 58px) + 12px) 10px 10px; }
+
+      .wrap {
+        width: 100%;
+        gap: 12px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        border-radius: 16px;
+        gap: 14px;
+      }
+
+      .hero h1 {
+        font-size: clamp(21px, 6.2vw, 28px);
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .hero p {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .hero-badges {
+        margin-top: 12px;
+      }
+
+      .hero-visual {
+        min-height: 280px;
+        aspect-ratio: 4 / 5;
+        padding: 8px;
+      }
+
+      .article {
+        padding: 14px;
+        border-radius: 14px;
+      }
+
+      .article h2 {
+        font-size: 18px;
+      }
+
+      .article p {
+        font-size: 13px;
+        line-height: 1.56;
+        margin-top: 8px;
+      }
+
+      .dev-lead,
+      .cap-lead {
+        font-size: 13px;
+      }
+
+      .dev-hero,
+      .cap-hero {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .dev-hero-copy,
+      .cap-hero-copy,
+      .dev-hero-visual,
+      .cap-hero-visual,
+      .dev-card,
+      .cap-card,
+      .dev-roadmap {
+        border-radius: 12px;
+      }
+
+      .dev-hero-copy,
+      .cap-hero-copy {
+        padding: 12px;
+      }
+
+      .dev-hero-copy h3,
+      .cap-hero-copy h3,
+      .dev-roadmap h3 {
+        font-size: 16px;
+      }
+
+      .dev-hero-copy p,
+      .cap-hero-copy p,
+      .dev-card p,
+      .cap-card p,
+      .dev-roadmap > p {
+        font-size: 13px;
+        line-height: 1.52;
+      }
+
+      .dev-hero-visual,
+      .cap-hero-visual {
+        min-height: 164px;
+      }
+
+      .visual-chip {
+        font-size: 9px;
+        letter-spacing: 0.07em;
+        padding: 4px 8px;
+      }
+
+      .dev-grid,
+      .cap-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .dev-card,
+      .cap-card {
+        padding: 12px;
+      }
+
+      .dev-card h3,
+      .cap-card h3 {
+        font-size: 15px;
+      }
+
+      .dev-card ul,
+      .cap-card ul,
+      .roadmap-copy ul {
+        font-size: 12px;
+      }
+
+      .roadmap-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding-top: 9px;
+      }
+
+      .roadmap-year {
+        width: fit-content;
+      }
+
+      .roadmap-copy h4 {
+        font-size: 14px;
+      }
+
+      .footer-note {
+        text-align: center;
+        padding: 8px 0 4px;
+      }
+
+      .wrap > [id] {
+        scroll-margin-top: calc(var(--top-h) + 18px);
+      }
+    }
+
+    @media (max-width: 420px) {
+      .topbar {
+        padding: 8px 8px;
+      }
+
+      .brand-title {
+        font-size: 15px;
+        letter-spacing: 0;
+      }
+
+      .login-btn {
+        padding: 9px 12px;
+        font-size: 12px;
+      }
+
+      .menu a {
+        min-width: 94px;
+        max-width: 116px;
+        font-size: 11px;
+        padding: 7px 8px;
+      }
+
+      .dev-hero-copy h3,
+      .cap-hero-copy h3,
+      .dev-roadmap h3 {
+        font-size: 15px;
+      }
+
+      .dev-card h3,
+      .cap-card h3 {
+        font-size: 14px;
+      }
+
+      .dev-hero-visual span,
+      .cap-hero-visual span {
+        font-size: 10px;
+        padding: 5px 7px;
+      }
+
+      .visual-chip {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="/assets/logo-optimized-BnrUG8xa.png" alt="WMSprinkler logo" />
+        <div class="brand-text">
+          <p class="brand-title">WM Sprinkler</p>
+          <p class="brand-sub">Profesjonalny system inteligentnego nawadniania</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="lang-switcher" id="lang-switcher">
+          <button
+            class="lang-trigger"
+            id="lang-trigger"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-label="Wybierz język"
+            title="Wybierz język"
+          >
+            🇵🇱
+          </button>
+          <div class="lang-menu" id="lang-menu" role="menu" aria-label="Wybór języka">
+            <button class="lang-option" type="button" data-lang="pl" role="menuitemradio" aria-checked="true" aria-label="Polski" title="Polski">🇵🇱</button>
+            <button class="lang-option" type="button" data-lang="en" role="menuitemradio" aria-checked="false" aria-label="English" title="English">🇬🇧</button>
+            <button class="lang-option" type="button" data-lang="de" role="menuitemradio" aria-checked="false" aria-label="Deutsch" title="Deutsch">🇩🇪</button>
+            <button class="lang-option" type="button" data-lang="es" role="menuitemradio" aria-checked="false" aria-label="Español" title="Español">🇪🇸</button>
+          </div>
+        </div>
+        <a class="login-btn" href="/login">Logowanie</a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="menu-label">Menu</p>
+      <nav class="menu">
+        <a href="#projekt">Opis projektu</a>
+        <a href="#integracje">Integracje</a>
+        <a href="#zalozenia">Założenia</a>
+        <a href="#mozliwosci">Możliwości</a>
+        <a href="#rozwoj">Rozwój</a>
+        <a href="#o-nas">O nas</a>
+      </nav>
+      <div class="sidebar-watermark" aria-hidden="true">
+        <img src="/icon-512.png" alt="" />
+      </div>
+    </aside>
+
+    <main>
+      <div class="wrap">
+        <section class="hero" aria-label="Wstęp">
+          <div>
+            <h1>Nowoczesne zarządzanie nawadnianiem dla domu, ogrodu i profesjonalnych instalacji</h1>
+            <p>
+              WM Sprinkler łączy niezawodny sterownik urządzenia, panel cloud i integrację z Home Assistant.
+              Projekt rozwijamy stale, dbając o jakość, bezpieczeństwo i wygodę codziennej obsługi.
+            </p>
+            <div class="hero-badges">
+              <span>ESP32 + Cloud</span>
+              <span>MQTT + Home Assistant</span>
+              <span>OTA i monitorowanie online</span>
+            </div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <img src="/landing/images/hero-esp32-cloud.jpg" alt="" />
+          </div>
+        </section>
+
+        <article class="article" id="projekt">
+          <h2>Opis projektu</h2>
+          <p>
+            System składa się z firmware urządzenia, panelu użytkownika, panelu administracyjnego i warstwy cloud.
+            Dzięki temu użytkownik ma pełną kontrolę nad strefami, harmonogramami i parametrami pracy,
+            a jednocześnie otrzymuje bezpieczny dostęp zdalny i zautomatyzowane aktualizacje.
+          </p>
+        </article>
+
+        <article class="article" id="integracje">
+          <h2>Integracje</h2>
+          <p>
+            Najważniejszą integracją jest MQTT z Home Assistant, gdzie urządzenie pojawia się automatycznie przez discovery.
+            Użytkownik może odczytywać stany i sterować strefami bez ręcznej konfiguracji wielu encji.
+            Architektura pozwala również rozbudowywać integracje o kolejne platformy.
+          </p>
+        </article>
+
+        <article class="article cap-article" id="zalozenia">
+          <h2>Założenia projektu WM Sprinkler</h2>
+          <p class="cap-lead">
+            WM Sprinkler powstał z jednej potrzeby: stworzenia systemu nawadniania, który działa inteligentnie,
+            niezawodnie i bez kompromisów. Od początku rozwijamy go nie jako kolejny sterownik, ale jako nowoczesną
+            platformę technologiczną łączącą automatykę, analizę danych i wygodę zdalnego zarządzania.
+          </p>
+
+          <div class="cap-hero">
+            <div class="cap-hero-copy">
+              <h3>Fundament projektu</h3>
+              <p>
+                Założenie jest proste: ogród ma dostawać dokładnie tyle wody, ile potrzebuje, a użytkownik ma mieć
+                pełną kontrolę bez ciągłego pilnowania systemu. Technologia ma upraszczać codzienność, nie ją komplikować.
+              </p>
+            </div>
+            <div class="cap-hero-visual zalozenia-visual" aria-hidden="true">
+              <div class="visual-chip">Data-driven irrigation</div>
+              <span>Intelligent + reliable + open</span>
+            </div>
+          </div>
+
+          <div class="cap-grid">
+            <section class="cap-card">
+              <h3><span class="icon">🌱</span>Inteligencja zamiast sztywnych schematów</h3>
+              <p>WM Sprinkler reaguje na rzeczywiste warunki środowiskowe, a nie tylko na zapisany zegar.</p>
+              <ul>
+                <li>analiza pogody,</li>
+                <li>uwzględnianie opadów,</li>
+                <li>reakcja na temperaturę,</li>
+                <li>dostosowanie dawki wody.</li>
+              </ul>
+              <p class="dev-emphasis">Ogród nie działa według zegarka. Działa według natury.</p>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">💧</span>Maksymalna oszczędność wody</h3>
+              <p>Racjonalne gospodarowanie wodą to jeden z kluczowych filarów całego systemu.</p>
+              <ul>
+                <li>ograniczanie podlewania po deszczu,</li>
+                <li>redukcja dawek przy wysokiej wilgotności,</li>
+                <li>optymalizacja czasu sekcji,</li>
+                <li>eliminowanie zbędnych cykli.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🧠</span>Automatyzacja, która upraszcza życie</h3>
+              <p>System ma działać w tle i odciążać użytkownika w codziennej obsłudze.</p>
+              <ul>
+                <li>automatyczne korekty podlewania,</li>
+                <li>inteligentne harmonogramy,</li>
+                <li>samouczące algorytmy,</li>
+                <li>predykcja zapotrzebowania na wodę.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🌐</span>Dostępność bez ograniczeń</h3>
+              <p>Nowoczesny system powinien być dostępny zawsze i wszędzie.</p>
+              <ul>
+                <li>działanie lokalne (offline),</li>
+                <li>dostęp zdalny (online),</li>
+                <li>bezpieczna komunikacja,</li>
+                <li>szybka, prosta obsługa.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🔧</span>Otwartość i skalowalność</h3>
+              <p>Architektura modułowa pozwala rozwijać system razem z potrzebami użytkownika.</p>
+              <ul>
+                <li>rozbudowa o kolejne sekcje,</li>
+                <li>integracja z czujnikami,</li>
+                <li>aktualizacje OTA,</li>
+                <li>integracje smart-home i własne modyfikacje.</li>
+              </ul>
+              <p class="dev-emphasis">To platforma rozwojowa, nie zamknięty produkt.</p>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🛡</span>Niezależność technologiczna</h3>
+              <p>WM Sprinkler nie wymaga płatnych abonamentów i daje pełną kontrolę nad danymi.</p>
+              <ul>
+                <li>praca w pełni lokalna,</li>
+                <li>działanie bez internetu,</li>
+                <li>brak opłat za podstawowe funkcje,</li>
+                <li>pełna własność i kontrola danych użytkownika.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🌍</span>Wizja długoterminowa</h3>
+              <p>Celem jest stworzenie jednego z najbardziej zaawansowanych i dostępnych systemów klasy smart.</p>
+              <ul>
+                <li>uczenie się środowiska,</li>
+                <li>optymalizacja zużycia zasobów,</li>
+                <li>integracja z domem przyszłości,</li>
+                <li>wieloletni rozwój platformy.</li>
+              </ul>
+              <p class="dev-emphasis">
+                WM Sprinkler to fundament pod inteligentne zarządzanie wodą: dziś w ogrodzie, jutro w większych instalacjach.
+              </p>
+            </section>
+          </div>
+        </article>
+
+        <article class="article cap-article" id="mozliwosci">
+          <h2>Możliwości WM Sprinkler</h2>
+          <p class="cap-lead">
+            WM Sprinkler to zaawansowany system sterowania nawodnieniem, który łączy precyzję automatyki
+            z wygodą nowoczesnej aplikacji webowej. Został zaprojektowany tak, aby zapewnić pełną kontrolę
+            nad podlewaniem lokalnie i zdalnie.
+          </p>
+
+          <div class="cap-hero">
+            <div class="cap-hero-copy">
+              <h3>Pełna kontrola nad ogrodem</h3>
+              <p>
+                Sterowanie sekcjami, harmonogramy, automatyka pogodowa, monitoring i zdalny dostęp działają
+                w jednym spójnym systemie. Dzięki temu każde podlewanie jest precyzyjne i przewidywalne.
+              </p>
+            </div>
+            <div class="cap-hero-visual mozliwosci-visual" aria-hidden="true">
+              <div class="visual-chip">Multi-zone control</div>
+              <span>Automation + cloud + real-time</span>
+            </div>
+          </div>
+
+          <div class="cap-grid">
+            <section class="cap-card">
+              <h3><span class="icon">💧</span>Sterowanie wieloma sekcjami</h3>
+              <p>Każda sekcja może działać niezależnie i mieć własną konfigurację.</p>
+              <ul>
+                <li>własny harmonogram,</li>
+                <li>indywidualny czas podlewania,</li>
+                <li>tryb ręczny i automatyczny,</li>
+                <li>dynamiczny procent podlewania.</li>
+              </ul>
+              <p class="dev-emphasis">Dostosujesz osobno trawnik, rabaty, szklarnię i linie kroplujące.</p>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🗓</span>Zaawansowane harmonogramy</h3>
+              <p>System oferuje elastyczne planowanie i kontrolę sekwencji pracy sekcji.</p>
+              <ul>
+                <li>harmonogramy dzienne i tygodniowe,</li>
+                <li>wiele programów równolegle,</li>
+                <li>określone godziny startu,</li>
+                <li>dni aktywne według kalendarza.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🌦</span>Automatyczna korekta pogodowa</h3>
+              <p>WM Sprinkler analizuje warunki i dynamicznie modyfikuje intensywność nawadniania.</p>
+              <ul>
+                <li>ograniczenie podlewania po opadach,</li>
+                <li>zwiększenie dawki przy wysokich temperaturach,</li>
+                <li>wstrzymanie podlewania przy deszczu,</li>
+                <li>adaptacyjny procent nawadniania.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">📊</span>Monitoring w czasie rzeczywistym</h3>
+              <p>W aplikacji masz bieżący podgląd pracy i historii systemu.</p>
+              <ul>
+                <li>aktywna sekcja i pozostały czas,</li>
+                <li>historia uruchomień,</li>
+                <li>procent automatycznej korekty,</li>
+                <li>status połączenia urządzenia.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🌐</span>Dostęp lokalny i zdalny</h3>
+              <p>System działa lokalnie, ale zapewnia również bezpieczny dostęp przez internet.</p>
+              <ul>
+                <li>zdalne sterowanie z dowolnego miejsca,</li>
+                <li>podgląd statusu poza domem,</li>
+                <li>powiadomienia o zdarzeniach,</li>
+                <li>pełna kontrola także na wakacjach.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🔔</span>Powiadomienia i integracje</h3>
+              <p>Platforma komunikuje kluczowe zdarzenia i łatwo łączy się z automatyką domową.</p>
+              <ul>
+                <li>start i koniec podlewania,</li>
+                <li>błędy systemowe i zmiany statusu,</li>
+                <li>zdarzenia pogodowe,</li>
+                <li>MQTT, Home Assistant i smart-home.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🔄</span>Aktualizacje OTA</h3>
+              <p>Firmware aktualizujesz przez sieć bez demontażu sterownika.</p>
+              <ul>
+                <li>nowe funkcje bez wizyty przy urządzeniu,</li>
+                <li>poprawki bezpieczeństwa i stabilności,</li>
+                <li>ciągły rozwój bez dodatkowego sprzętu.</li>
+              </ul>
+            </section>
+
+            <section class="cap-card">
+              <h3><span class="icon">🧩</span>Architektura modułowa</h3>
+              <p>Nowoczesna baza ESP32 daje elastyczność i długowieczność całego rozwiązania.</p>
+              <ul>
+                <li>rozbudowa o czujniki,</li>
+                <li>integracja z systemami smart-home,</li>
+                <li>skalowanie liczby sekcji,</li>
+                <li>personalizacja ustawień użytkownika.</li>
+              </ul>
+            </section>
+          </div>
+        </article>
+
+        <article class="article dev-article" id="rozwoj">
+          <h2>Rozwój WM Sprinkler</h2>
+          <p class="dev-lead">
+            WM Sprinkler to coś więcej niż sterownik podlewania. To nowoczesna platforma inteligentnego zarządzania
+            nawodnieniem, projektowana z myślą o maksymalnej wygodzie, oszczędności wody i pełnej automatyzacji
+            pracy ogrodu. Od pierwszej linii kodu rozwijamy ten system jako rozwiązanie klasy premium,
+            które reaguje na warunki środowiskowe w czasie rzeczywistym.
+          </p>
+
+          <div class="dev-hero">
+            <div class="dev-hero-copy">
+              <h3>Kierunek rozwoju</h3>
+              <p>
+                Łączymy automatykę nawadniania, dane pogodowe, analitykę oraz bezpieczny dostęp cloud.
+                Celem jest system, który z każdym sezonem działa precyzyjniej i realnie pomaga oszczędzać wodę.
+              </p>
+            </div>
+            <div class="dev-hero-visual rozwoj-visual" aria-hidden="true">
+              <div class="visual-chip">WM Smart Climate</div>
+              <span>Smart irrigation platform</span>
+            </div>
+          </div>
+
+          <div class="dev-grid">
+            <section class="dev-card">
+              <h3><span class="icon">💧</span>Inteligentne oszczędzanie wody</h3>
+              <p>System analizuje dane pogodowe i sam decyduje, ile wody naprawdę potrzeba.</p>
+              <ul>
+                <li>opady deszczu,</li>
+                <li>temperaturę,</li>
+                <li>wilgotność powietrza,</li>
+                <li>prognozy pogody.</li>
+              </ul>
+              <p class="dev-emphasis">Efekt: niższe rachunki za wodę i zdrowsza roślinność, bez ręcznej ingerencji.</p>
+            </section>
+
+            <section class="dev-card">
+              <h3><span class="icon">🧠</span>Automatyka, która uczy się ogrodu</h3>
+              <p>Rozwijamy WM Smart Climate - algorytm analizujący historię podlewania i potrzeby roślin.</p>
+              <ul>
+                <li>predykcja zapotrzebowania na wodę,</li>
+                <li>optymalizacja długości sekcji,</li>
+                <li>uwzględnianie sezonowości,</li>
+                <li>automatyczne propozycje harmonogramów.</li>
+              </ul>
+            </section>
+
+            <section class="dev-card">
+              <h3><span class="icon">🌐</span>Sterowanie z dowolnego miejsca</h3>
+              <p>Architektura cloud daje bezpieczny dostęp do systemu zawsze, kiedy go potrzebujesz.</p>
+              <ul>
+                <li>podgląd statusu sekcji,</li>
+                <li>ręczne uruchamianie podlewania,</li>
+                <li>zmiana harmonogramów,</li>
+                <li>powiadomienia o zdarzeniach.</li>
+              </ul>
+            </section>
+
+            <section class="dev-card">
+              <h3><span class="icon">📊</span>Dane, które mają znaczenie</h3>
+              <p>WM Sprinkler rozwijamy jako centrum analityki ogrodu i realnych oszczędności.</p>
+              <ul>
+                <li>podgląd zużycia wody,</li>
+                <li>statystyki podlewania,</li>
+                <li>porównania miesięczne i sezonowe,</li>
+                <li>szacowanie oszczędności.</li>
+              </ul>
+            </section>
+
+            <section class="dev-card">
+              <h3><span class="icon">🖥</span>Nowoczesny interfejs</h3>
+              <p>Interfejs rozwijamy w stylu aplikacji smart-home premium.</p>
+              <ul>
+                <li>responsywna aplikacja webowa (PWA),</li>
+                <li>obsługa telefonu, tabletu i komputera,</li>
+                <li>dedykowane panele ścienne,</li>
+                <li>szybki podgląd statusu systemu.</li>
+              </ul>
+            </section>
+
+            <section class="dev-card">
+              <h3><span class="icon">🔧</span>Technologia gotowa na przyszłość</h3>
+              <p>Platforma ESP32 daje stabilność, wydajność i duży potencjał rozbudowy.</p>
+              <ul>
+                <li>wysoka moc obliczeniowa,</li>
+                <li>modułowa rozbudowa o czujniki,</li>
+                <li>aktualizacje OTA,</li>
+                <li>długowieczność projektu.</li>
+              </ul>
+            </section>
+          </div>
+
+          <section class="dev-roadmap" aria-label="Roadmapa">
+            <h3>Roadmapa rozwoju</h3>
+            <p>Plan rozwoju WM Sprinkler od fundamentów systemu po pełny ekosystem smart-home.</p>
+
+            <ol class="roadmap-list">
+              <li class="roadmap-item">
+                <span class="roadmap-year">2024</span>
+                <div class="roadmap-copy">
+                  <h4>Fundament systemu</h4>
+                  <ul>
+                    <li>architektura sterownika,</li>
+                    <li>sterowanie sekcjami na ESP32,</li>
+                    <li>harmonogramy podlewania,</li>
+                    <li>lokalny panel WWW i tryby ręczny/automatyczny.</li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="roadmap-item">
+                <span class="roadmap-year">2025</span>
+                <div class="roadmap-copy">
+                  <h4>Inteligentna automatyka</h4>
+                  <ul>
+                    <li>integracja danych pogodowych,</li>
+                    <li>dynamiczny procent podlewania,</li>
+                    <li>historia opadów (rain buffer),</li>
+                    <li>powiadomienia Push/MQTT i Home Assistant.</li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="roadmap-item">
+                <span class="roadmap-year">2026</span>
+                <div class="roadmap-copy">
+                  <h4>Chmura i zdalny dostęp</h4>
+                  <ul>
+                    <li>konta użytkowników,</li>
+                    <li>rejestracja urządzeń online,</li>
+                    <li>panel chmurowy i synchronizacja ustawień,</li>
+                    <li>zdalne OTA firmware.</li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="roadmap-item">
+                <span class="roadmap-year">2027</span>
+                <div class="roadmap-copy">
+                  <h4>AI i analityka</h4>
+                  <ul>
+                    <li>WM Smart Climate,</li>
+                    <li>samouczące harmonogramy,</li>
+                    <li>predykcja zapotrzebowania na wodę,</li>
+                    <li>zaawansowane statystyki i raporty.</li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="roadmap-item">
+                <span class="roadmap-year">2028+</span>
+                <div class="roadmap-copy">
+                  <h4>Ekosystem WM Sprinkler</h4>
+                  <ul>
+                    <li>czujniki wilgotności gleby,</li>
+                    <li>czujniki przepływu wody,</li>
+                    <li>moduły rozszerzeń sekcji,</li>
+                    <li>wersja PRO i integracje Matter/Thread.</li>
+                  </ul>
+                </div>
+              </li>
+            </ol>
+          </section>
+        </article>
+
+        <article class="article" id="o-nas">
+          <h2>O nas</h2>
+          <p>
+            WM Sprinkler to zespół, który projektuje i rozwija własny system automatycznego nawadniania.
+            Skupiamy się na praktycznych rozwiązaniach: stabilnym działaniu, prostym wdrożeniu i wygodnym
+            zarządzaniu instalacją zarówno lokalnie, jak i przez internet.
+            <br><br>
+            Kontakt: PaweMed, e-mail: <a href="mailto:witkowski.med@gmail.com">witkowski.med@gmail.com</a>
+          </p>
+        </article>
+
+        <div class="footer-note">PaweMed 2026</div>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function () {
+      const topbar = document.querySelector(".topbar");
+      const sidebar = document.querySelector(".sidebar");
+      const links = document.querySelectorAll('.menu a[href^="#"]');
+      if (!topbar || !links.length) return;
+
+      const mobileMq = window.matchMedia("(max-width: 960px)");
+
+      function syncMenuTop() {
+        if (!sidebar) return;
+        const topbarBottom = topbar.getBoundingClientRect().bottom || 0;
+        const visibleTopbar = Math.max(0, Math.min(window.innerHeight, topbarBottom));
+        sidebar.style.setProperty("--menu-top", `${Math.round(visibleTopbar)}px`);
+
+        if (!mobileMq.matches) {
+          document.documentElement.style.removeProperty("--mobile-menu-h");
+          return;
+        }
+        const sidebarH = sidebar.getBoundingClientRect().height || sidebar.offsetHeight || 0;
+        document.documentElement.style.setProperty("--mobile-menu-h", `${Math.round(sidebarH)}px`);
+      }
+
+      function getOffset() {
+        const sidebarPos = !!sidebar ? getComputedStyle(sidebar).position : "";
+        const sidebarPinned = sidebarPos === "sticky" || sidebarPos === "fixed";
+        const sidebarH = (mobileMq.matches && sidebarPinned) ? (sidebar.getBoundingClientRect().height || 0) : 0;
+        const sidebarTopGap = (mobileMq.matches && sidebarPinned && sidebar) ? Math.max(0, sidebar.getBoundingClientRect().top || 0) : 0;
+        if (mobileMq.matches) return sidebarTopGap + sidebarH + 10;
+        return 12;
+      }
+
+      function scrollToHash(hash, updateHash = true) {
+        const id = String(hash || "").replace(/^#/, "");
+        if (!id) return;
+        const target = document.getElementById(id);
+        if (!target) return;
+        const y = target.getBoundingClientRect().top + window.scrollY - getOffset();
+        window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+        if (updateHash) history.replaceState(null, "", `#${id}`);
+      }
+
+      const menuRow = document.querySelector(".menu");
+      const sectionMap = new Map();
+      const sectionOrder = [];
+      links.forEach((link) => {
+        const id = String(link.getAttribute("href") || "").replace(/^#/, "");
+        const section = id ? document.getElementById(id) : null;
+        if (section) {
+          sectionMap.set(id, section);
+          sectionOrder.push(id);
+        }
+      });
+
+      function setActiveMenu(id, centerOnMenu = false) {
+        let changed = false;
+        links.forEach((link) => {
+          const isActive = String(link.getAttribute("href") || "") === `#${id}`;
+          if (isActive && !link.classList.contains("is-active")) changed = true;
+          link.classList.toggle("is-active", isActive);
+          if (isActive && changed) {
+            link.classList.remove("is-animating");
+            // Restart animation each time active chip changes.
+            void link.offsetWidth;
+            link.classList.add("is-animating");
+          }
+          if (isActive && mobileMq.matches && changed && centerOnMenu && menuRow) {
+            const maxLeft = Math.max(0, menuRow.scrollWidth - menuRow.clientWidth);
+            const targetLeft = Math.max(0, Math.min(maxLeft, link.offsetLeft - (menuRow.clientWidth - link.offsetWidth) / 2));
+            menuRow.scrollTo({ left: targetLeft, behavior: "smooth" });
+          }
+        });
+      }
+
+      function updateActiveMenuByScroll() {
+        const offset = getOffset();
+        let currentId = sectionOrder[0] || "";
+        for (const id of sectionOrder) {
+          const section = sectionMap.get(id);
+          if (!section) continue;
+          const top = section.getBoundingClientRect().top - offset;
+          if (top <= 52) currentId = id;
+          else break;
+        }
+        const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8;
+        if (nearBottom && sectionOrder.length) {
+          currentId = sectionOrder[sectionOrder.length - 1];
+        }
+        if (currentId) setActiveMenu(currentId, true);
+      }
+
+      links.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const href = link.getAttribute("href") || "";
+          const id = href.replace(/^#/, "");
+          if (id) setActiveMenu(id, true);
+          scrollToHash(href, true);
+        });
+      });
+
+      window.addEventListener("load", () => {
+        syncMenuTop();
+        updateActiveMenuByScroll();
+        if (location.hash) {
+          setTimeout(() => scrollToHash(location.hash, false), 30);
+        }
+      });
+
+      let ticking = false;
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          ticking = false;
+          syncMenuTop();
+          updateActiveMenuByScroll();
+        });
+      }
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+      if (typeof mobileMq.addEventListener === "function") {
+        mobileMq.addEventListener("change", onScroll);
+      } else if (typeof mobileMq.addListener === "function") {
+        mobileMq.addListener(onScroll);
+      }
+    })();
+  </script>
+  <script src="/landing/lang-switcher.js"></script>
+</body>
+</html>

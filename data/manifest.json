@@ -1,0 +1,67 @@
+{
+  "name": "System Nawadniania",
+  "short_name": "Nawadnianie",
+  "description": "Progressive Web App do sterowania systemem nawadniania ESP32",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F2F7",
+  "theme_color": "#007AFF",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "lang": "pl",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Strefy nawadniania",
+      "short_name": "Strefy",
+      "description": "Szybki dostęp do kontroli stref",
+      "url": "/?section=zones",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2Ij48dGV4dCB4PSI0OCIgeT0iNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0OCIgZmlsbD0iIzAwN0FGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+SqDwvdGV4dD48L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Harmonogramy",
+      "short_name": "Harmonogram",
+      "description": "Zarządzanie harmonogramami",
+      "url": "/?section=schedules",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2Ij48dGV4dCB4PSI0OCIgeT0iNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0OCIgZmlsbD0iIzAwN0FGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+ThTwvdGV4dD48L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOTAgODQ0IiB3aWR0aD0iMzkwIiBoZWlnaHQ9Ijg0NCI+PHJlY3QgZmlsbD0iI0YyRjJGNyIgeD0iMCIgeT0iMCIgd2lkdGg9IjM5MCIgaGVpZ2h0PSI4NDQiLz48cmVjdCBmaWxsPSJ3aGl0ZSIgeD0iMTYiIHk9IjE2IiB3aWR0aD0iMzU4IiBoZWlnaHQ9IjgwIiByeD0iMTYiLz48dGV4dCB4PSIxOTUiIHk9IjY0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMwMDdBRkYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkFwbGlrYWNqYSBOYXdhZG5pYW5pYTwvdGV4dD48L3N2Zz4=",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Strona główna aplikacji"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "protocol_handlers": [],
+  "file_handlers": []
+}

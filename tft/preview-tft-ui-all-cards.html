@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WM Sprinkler TFT - Wszystkie karty</title>
+  <style>
+    :root {
+      --bg: #030812;
+      --card: #081628;
+      --card2: #0c2238;
+      --stroke: #146084;
+      --stroke-strong: #10cdd9;
+      --text: #ebf4ff;
+      --muted: #7ca8be;
+      --good: #42d890;
+      --warn: #f3a85c;
+      --top1: #06162e;
+      --top2: #020a1a;
+      --dim1: #040c1a;
+      --dim2: #01050d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(1600px 900px at 50% 10%, #163a62, #050c18 70%);
+      color: var(--text);
+      font-family: "Segoe UI", sans-serif;
+      padding: 24px;
+    }
+    .title {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      letter-spacing: .3px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(320px, 1fr));
+      gap: 16px;
+      max-width: 1740px;
+      margin: 0 auto;
+    }
+    .card-wrap { display: flex; flex-direction: column; align-items: center; }
+    .screen {
+      width: 320px;
+      height: 240px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid #17324d;
+      box-shadow: 0 18px 35px rgba(0,0,0,.45);
+      position: relative;
+    }
+    .top {
+      height: 44px;
+      background: linear-gradient(180deg, var(--top1), var(--top2));
+      border-bottom: 2px solid var(--stroke-strong);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      font-weight: 700;
+      font-size: 19px;
+    }
+    .logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px rgba(79,216,191,.45));
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 6px 0;
+    }
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 12px; }
+    .tile {
+      height: 48px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 32px;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+    }
+    .tile.active { color: var(--good); background: var(--card2); }
+    .focus {
+      position: absolute;
+      width: 72px;
+      height: 52px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 11px rgba(16,205,217,.55);
+      pointer-events: none;
+      left: 166px;
+      top: 74px;
+    }
+    .statusbar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 8px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 12px;
+      gap: 7px;
+    }
+    .value-warn { color: var(--warn); font-weight: 700; }
+    .line-card {
+      height: 44px;
+      margin: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .line-card strong { color: var(--text); font-size: 30px; }
+    .line-card.small strong { font-size: 22px; }
+    .manual-focus {
+      position: absolute;
+      left: 14px;
+      width: 292px;
+      height: 48px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 10px rgba(16,205,217,.52);
+      pointer-events: none;
+      top: 170px;
+    }
+    .btn {
+      margin: 8px 16px 6px;
+      height: 52px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, #0c6e95, #094f70);
+      display: grid;
+      place-items: center;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+    .hint { text-align: center; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .row {
+      margin: 8px 16px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 7px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .row b { color: var(--text); }
+    .row .ok { color: var(--good); font-weight: 700; }
+    .row .temp { color: #6dd6ff; font-weight: 700; }
+    .row .neutral { color: var(--text); font-weight: 700; }
+    .set-box {
+      margin: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      padding: 8px 12px;
+      height: 58px;
+      position: relative;
+    }
+    .set-label { color: var(--muted); font-size: 13px; }
+    .set-value { position: absolute; right: 12px; top: 8px; font-weight: 700; }
+    .slider { height: 8px; border-radius: 4px; background: #0d243a; margin-top: 10px; }
+    .slider > span {
+      display: block;
+      width: 70%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--stroke-strong);
+      position: relative;
+    }
+    .slider > span::after {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #d6f5ff;
+      border: 1px solid #fff;
+      position: absolute;
+      right: -7px;
+      top: -3px;
+    }
+    .timeout { display: flex; gap: 8px; position: absolute; right: 10px; bottom: 8px; }
+    .timeout span {
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: #0a1d31;
+    }
+    .timeout span.sel { border-color: var(--stroke-strong); background: #0f3950; }
+    .set-focus {
+      position: absolute;
+      left: 14px;
+      width: 292px;
+      height: 62px;
+      border-radius: 12px;
+      border: 2px solid #10cdd9;
+      box-shadow: 0 0 10px rgba(16,205,217,.52);
+      pointer-events: none;
+      top: 142px;
+    }
+    .dim {
+      background: linear-gradient(180deg, var(--dim1), var(--dim2));
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dim img {
+      width: 210px;
+      height: 210px;
+      object-fit: contain;
+      opacity: .88;
+      filter: drop-shadow(0 0 16px rgba(60,153,220,.35));
+    }
+    .dim p { margin: 0; color: #8faec4; font-size: 12px; }
+    .caption {
+      margin-top: 10px;
+      text-align: center;
+      color: #dce9f7;
+      font-size: 18px;
+      font-weight: 700;
+      max-width: 320px;
+      line-height: 1.25;
+    }
+    .live-section {
+      max-width: 840px;
+      margin: 34px auto 0;
+      padding: 16px;
+      border: 1px solid #1b3d61;
+      border-radius: 16px;
+      background: rgba(4, 15, 30, 0.78);
+      box-shadow: 0 18px 35px rgba(0,0,0,.35);
+    }
+    .live-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .live-sub {
+      text-align: center;
+      color: #93b5ca;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .live-tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .live-tabs button {
+      border: 1px solid var(--stroke);
+      background: #0a1d31;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .live-tabs button.active {
+      border-color: var(--stroke-strong);
+      background: #0f3950;
+      box-shadow: 0 0 10px rgba(16,205,217,.35);
+    }
+    .live-wrap {
+      display: flex;
+      justify-content: center;
+    }
+    .live-page {
+      display: none;
+      position: absolute;
+      inset: 0;
+    }
+    .live-page.active {
+      display: block;
+    }
+    .live-manual-btn {
+      margin: 8px 16px 6px;
+      height: 52px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, #6d1a2d, #4a1020);
+      display: grid;
+      place-items: center;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .live-dim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, var(--dim1), var(--dim2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .live-dim img {
+      width: 210px;
+      height: 210px;
+      object-fit: contain;
+      opacity: .88;
+      filter: drop-shadow(0 0 16px rgba(60,153,220,.35));
+    }
+    .live-info {
+      text-align: center;
+      color: #93b5ca;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">WM Sprinkler TFT - wszystkie karty menu</div>
+  <div class="grid">
+    <div class="card-wrap">
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Panel Główny</div>
+        <div class="tiles">
+          <div class="tile">1</div><div class="tile">2</div><div class="tile">3</div><div class="tile">4</div>
+          <div class="tile active">5</div><div class="tile">6</div><div class="tile">7</div><div class="tile">8</div>
+        </div>
+        <div class="focus"></div>
+        <div class="statusbar"><b>Stan:</b><span class="value-warn">Gotowy</span></div>
+      </div>
+      <div class="caption">1. Panel Główny</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Podlewanie Ręczne</div>
+        <div class="line-card"><span>Sekcja</span><strong>3</strong></div>
+        <div class="line-card small"><span>Czas</span><strong>15 min</strong></div>
+        <div class="btn">START</div>
+        <div class="manual-focus"></div>
+      </div>
+      <div class="caption">2. Podlewanie Ręczne</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Status Systemu</div>
+        <div class="row"><b>WiFi:</b> <span class="ok">Połączono</span></div>
+        <div class="row"><b>Cloud:</b> <span class="ok">Połączono</span></div>
+        <div class="row"><b>Temp:</b> <span class="temp">23.1 C</span></div>
+        <div class="row"><b>Nawadnianie:</b> <span class="neutral">100 %</span></div>
+      </div>
+      <div class="caption">3. Status Systemu (klik = Ustawienia)</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="screen">
+        <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+        <div class="subtitle">Ustawienia</div>
+        <div class="set-box">
+          <div class="set-label">Jasność</div>
+          <div class="set-value">75%</div>
+          <div class="slider"><span></span></div>
+        </div>
+        <div class="set-box">
+          <div class="set-label">Auto przygaszanie</div>
+          <div class="timeout"><span>1 min</span><span class="sel">3 min</span><span>5 min</span></div>
+        </div>
+        <div class="set-focus"></div>
+        <div class="hint">Po czasie ekran schodzi do 15%, nie wyłącza się</div>
+      </div>
+      <div class="caption">4. Ustawienia (jasność + timeout 1/3/5)</div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="screen">
+        <div class="dim">
+          <img src="data/assets/logo-optimized-BnrUG8xa.png" alt="logo duze" />
+        </div>
+      </div>
+      <div class="caption">5. Ekran przygaszony (tapeta z dużym logo)</div>
+    </div>
+  </div>
+  <div class="live-section">
+    <div class="live-title">Podgląd Live: przełączanie zakładek z aktywną strefą</div>
+    <div class="live-sub">Strefa 3 jest uruchomiona, licznik startuje od 15:00 i odlicza niezależnie od wybranej zakładki.</div>
+    <div class="live-tabs">
+      <button type="button" data-live-tab-btn="home">Panel Główny</button>
+      <button type="button" class="active" data-live-tab-btn="manual">Podlewanie Ręczne</button>
+      <button type="button" data-live-tab-btn="status">Status</button>
+      <button type="button" data-live-tab-btn="settings">Ustawienia</button>
+      <button type="button" data-live-tab-btn="dim">Wygaszacz</button>
+    </div>
+    <div class="live-wrap">
+      <div class="screen" id="liveScreen">
+        <div class="live-page" id="livePage-home">
+          <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+          <div class="subtitle">Panel Główny</div>
+          <div class="tiles">
+            <div class="tile">1</div><div class="tile">2</div><div class="tile active" id="liveHomeZone">3</div><div class="tile">4</div>
+            <div class="tile">5</div><div class="tile">6</div><div class="tile">7</div><div class="tile">8</div>
+          </div>
+          <div class="focus"></div>
+          <div class="statusbar"><b>Stan:</b><span class="value-warn" id="liveHomeState">Sekcja 3</span></div>
+        </div>
+
+        <div class="live-page active" id="livePage-manual">
+          <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+          <div class="subtitle">Podlewanie Ręczne</div>
+          <div class="line-card"><span>Sekcja</span><strong id="liveZone">3</strong></div>
+          <div class="line-card small"><span id="liveManualLabel">Pozostało</span><strong id="liveManualValue">15:00</strong></div>
+          <div class="live-manual-btn" id="liveManualBtn">STOP</div>
+          <div class="manual-focus"></div>
+        </div>
+
+        <div class="live-page" id="livePage-status">
+          <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+          <div class="subtitle">Status Systemu</div>
+          <div class="row"><b>WiFi:</b> <span class="ok">Połączono</span></div>
+          <div class="row"><b>Cloud:</b> <span class="ok">Połączono</span></div>
+          <div class="row"><b>Temp:</b> <span class="temp">23.1 C</span></div>
+          <div class="row"><b>Nawadnianie:</b> <span class="neutral" id="liveWatering">100 %</span></div>
+        </div>
+
+        <div class="live-page" id="livePage-settings">
+          <div class="top"><img class="logo" src="data/assets/icon-only.png" alt="logo" />WM Sprinkler</div>
+          <div class="subtitle">Ustawienia</div>
+          <div class="set-box">
+            <div class="set-label">Jasność</div>
+            <div class="set-value">75%</div>
+            <div class="slider"><span></span></div>
+          </div>
+          <div class="set-box">
+            <div class="set-label">Auto przygaszanie</div>
+            <div class="timeout"><span>1 min</span><span class="sel">3 min</span><span>5 min</span></div>
+          </div>
+          <div class="set-focus"></div>
+          <div class="hint">Po czasie ekran schodzi do 15%, nie wyłącza się</div>
+        </div>
+
+        <div class="live-page" id="livePage-dim">
+          <div class="live-dim">
+            <img src="data/assets/logo-optimized-BnrUG8xa.png" alt="duże logo" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="live-info">Zmiana zakładek nie zatrzymuje odliczania: ten sam czas jest widoczny po powrocie do „Podlewanie Ręczne”.</div>
+  </div>
+  <script>
+    (function() {
+      const state = {
+        zone: 3,
+        totalSec: 15 * 60,
+        startedAtMs: Date.now(),
+        running: true,
+        tab: "manual"
+      };
+
+      const tabButtons = Array.from(document.querySelectorAll("[data-live-tab-btn]"));
+      const pages = {
+        home: document.getElementById("livePage-home"),
+        manual: document.getElementById("livePage-manual"),
+        status: document.getElementById("livePage-status"),
+        settings: document.getElementById("livePage-settings"),
+        dim: document.getElementById("livePage-dim")
+      };
+
+      const elManualLabel = document.getElementById("liveManualLabel");
+      const elManualValue = document.getElementById("liveManualValue");
+      const elHomeState = document.getElementById("liveHomeState");
+      const elWatering = document.getElementById("liveWatering");
+      const elManualBtn = document.getElementById("liveManualBtn");
+
+      function formatTime(sec) {
+        const s = Math.max(0, sec | 0);
+        const mm = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      function remainingSeconds(nowMs) {
+        if (!state.running) return 0;
+        const elapsed = Math.floor((nowMs - state.startedAtMs) / 1000);
+        const rem = state.totalSec - elapsed;
+        if (rem <= 0) {
+          state.running = false;
+          return 0;
+        }
+        return rem;
+      }
+
+      function renderTab() {
+        Object.keys(pages).forEach((key) => {
+          pages[key].classList.toggle("active", key === state.tab);
+        });
+        tabButtons.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.liveTabBtn === state.tab);
+        });
+      }
+
+      function renderClock() {
+        const rem = remainingSeconds(Date.now());
+        if (state.running) {
+          elManualLabel.textContent = "Pozostało";
+          elManualValue.textContent = formatTime(rem);
+          elHomeState.textContent = "Sekcja " + String(state.zone);
+          elWatering.textContent = "100 %";
+          elManualBtn.textContent = "STOP";
+        } else {
+          elManualLabel.textContent = "Czas";
+          elManualValue.textContent = "00:00";
+          elHomeState.textContent = "Gotowy";
+          elWatering.textContent = "0 %";
+          elManualBtn.textContent = "START";
+        }
+      }
+
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.tab = btn.dataset.liveTabBtn;
+          renderTab();
+          renderClock();
+        });
+      });
+
+      renderTab();
+      renderClock();
+      setInterval(renderClock, 1000);
+    })();
+  </script>
+</body>
+</html>

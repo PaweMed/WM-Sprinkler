@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WM Sprinkler - Smart Plug</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #141f33;
+      --text: #e7edf9;
+      --muted: #9db1d7;
+      --line: rgba(255,255,255,0.12);
+      --ok: #38d39f;
+      --warn: #f4b740;
+      --danger: #ef5f73;
+      --btn: #2dd4bf;
+      --btn2: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 95% -20%, #253f67 0%, transparent 60%),
+        radial-gradient(1000px 600px at -15% 120%, #1d3154 0%, transparent 55%),
+        var(--bg);
+    }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 0 14px 24px; }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .title { font-size: 24px; font-weight: 700; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .k { color: var(--muted); font-size: 12px; }
+    .v { font-size: 24px; margin-top: 6px; font-weight: 700; }
+    .v.small { font-size: 18px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: #08111f;
+      background: var(--btn);
+      cursor: pointer;
+    }
+    button.secondary {
+      color: #ecf1fb;
+      background: var(--btn2);
+    }
+    button.danger {
+      color: #fff;
+      background: var(--danger);
+    }
+    input {
+      width: 100%;
+      background: #0c1527;
+      color: var(--text);
+      border: 1px solid #314267;
+      border-radius: 10px;
+      padding: 9px;
+    }
+    .prog {
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .state-ok { color: var(--ok); }
+    .state-warn { color: var(--warn); }
+    .state-danger { color: var(--danger); }
+    .days { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+    a { color: #8ee7db; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">Smart Gniazdko BW-SHP6</div>
+        <div id="meta" class="muted">Ładowanie...</div>
+        <div class="muted"><a href="/devices">Zarządzaj przypisanymi urządzeniami</a></div>
+      </div>
+      <div class="row">
+        <button id="btnToggle">Przełącz ON/OFF</button>
+        <button id="btnRefresh" class="secondary">Odśwież</button>
+        <button id="btnLogout" class="secondary">Wyloguj</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="k">Stan przekaźnika</div><div id="relayState" class="v">-</div></div>
+      <div class="card"><div class="k">Moc</div><div id="power" class="v">-</div></div>
+      <div class="card"><div class="k">Napięcie</div><div id="voltage" class="v">-</div></div>
+      <div class="card"><div class="k">Prąd</div><div id="current" class="v">-</div></div>
+      <div class="card"><div class="k">Energia dziś</div><div id="energyToday" class="v small">-</div></div>
+      <div class="card"><div class="k">Energia całkowita</div><div id="energyTotal" class="v small">-</div></div>
+    </div>
+
+    <div class="card" style="margin-top:10px;">
+      <div class="k">Parowanie</div>
+      <div id="pairState" class="v small">-</div>
+      <div class="muted" style="margin-top:6px;">
+        `BW-SHP6` nie ma BLE, więc provisioning działa przez Wi-Fi (tryb parowania + AP urządzenia).
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <button id="btnPairStart" class="secondary">Włącz tryb parowania</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;">
+      <div class="k">Harmonogramy</div>
+      <div class="row" style="margin-top:8px;">
+        <label style="flex:1; min-width:160px;">Godzina <input id="pTime" type="time" value="06:00" /></label>
+        <label style="flex:1; min-width:140px;">Czas (min) <input id="pDuration" type="number" min="1" max="1440" value="10" /></label>
+      </div>
+      <div class="days" style="margin-top:8px;">
+        <label><input type="checkbox" class="day" value="1" checked /> Pon</label>
+        <label><input type="checkbox" class="day" value="2" checked /> Wt</label>
+        <label><input type="checkbox" class="day" value="3" checked /> Śr</label>
+        <label><input type="checkbox" class="day" value="4" checked /> Czw</label>
+        <label><input type="checkbox" class="day" value="5" checked /> Pt</label>
+        <label><input type="checkbox" class="day" value="6" checked /> Sob</label>
+        <label><input type="checkbox" class="day" value="0" checked /> Nd</label>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <button id="btnAddProgram">Dodaj harmonogram</button>
+      </div>
+      <div id="programList" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const q = (id) => document.getElementById(id);
+
+    function fmt(n, d = 2, unit = "") {
+      const v = Number(n || 0);
+      return `${v.toFixed(d)}${unit ? " " + unit : ""}`;
+    }
+
+    async function api(url, opt = {}) {
+      const r = await fetch(url, { credentials: "same-origin", ...opt });
+      if (!r.ok) {
+        let msg = `${r.status}`;
+        try { msg = JSON.stringify(await r.json()); } catch {}
+        throw new Error(msg);
+      }
+      const ct = r.headers.get("content-type") || "";
+      return ct.includes("application/json") ? r.json() : {};
+    }
+
+    function pairText(p) {
+      const state = String(p?.pair_state || "");
+      if (state === "assigned") return `<span class="state-ok">Przypisane do WMS</span>`;
+      if (state === "pairing") return `<span class="state-warn">Tryb parowania (Wi-Fi AP aktywny)</span>`;
+      return `<span class="state-danger">Nieprzypisane</span>`;
+    }
+
+    async function loadPrograms() {
+      const arr = await api("/api/programs");
+      const root = q("programList");
+      root.innerHTML = "";
+      (arr || []).forEach((p) => {
+        const days = Array.isArray(p.days) ? p.days.join(",") : "";
+        const row = document.createElement("div");
+        row.className = "prog";
+        row.innerHTML = `<div>#${p.id} | ${p.time} | ${p.duration} min | dni: ${days}</div><button class="danger">Usuń</button>`;
+        row.querySelector("button").onclick = async () => {
+          await api(`/api/programs?id=${encodeURIComponent(p.id)}`, { method: "DELETE" });
+          await loadPrograms();
+        };
+        root.appendChild(row);
+      });
+    }
+
+    async function refresh() {
+      const [session, status, telem, pair] = await Promise.all([
+        api("/api/session"),
+        api("/api/status"),
+        api("/api/plug/telemetry"),
+        api("/api/pair/state"),
+      ]);
+
+      q("meta").textContent = `${session.email} | ${status.device_id} | online: ${status.online ? "tak" : "nie"}`;
+      q("relayState").textContent = telem.relay_on ? "ON" : "OFF";
+      q("power").textContent = fmt(telem.power_w, 1, "W");
+      q("voltage").textContent = fmt(telem.voltage_v, 1, "V");
+      q("current").textContent = fmt(telem.current_a, 3, "A");
+      q("energyToday").textContent = fmt(telem.energy_today_kwh, 3, "kWh");
+      q("energyTotal").textContent = fmt(telem.energy_total_kwh, 3, "kWh");
+      q("pairState").innerHTML = pairText(pair);
+    }
+
+    q("btnRefresh").onclick = async () => {
+      await refresh();
+      await loadPrograms();
+    };
+
+    q("btnToggle").onclick = async () => {
+      await api("/api/zones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: 0, toggle: true }),
+      });
+      await refresh();
+    };
+
+    q("btnAddProgram").onclick = async () => {
+      const days = [...document.querySelectorAll(".day:checked")].map((x) => Number(x.value));
+      await api("/api/programs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          zone: 0,
+          time: q("pTime").value,
+          duration: Number(q("pDuration").value || 10),
+          days,
+          active: true,
+        }),
+      });
+      await loadPrograms();
+    };
+
+    q("btnPairStart").onclick = async () => {
+      await api("/api/pair/start", { method: "POST" });
+      await refresh();
+      alert("Tryb parowania uruchomiony. Dalej wykonaj provisioning Wi-Fi przez workflow WMS.");
+    };
+
+    q("btnLogout").onclick = async () => {
+      await api("/api/logout", { method: "POST" });
+      location.href = "/login";
+    };
+
+    refresh().catch(console.error);
+    loadPrograms().catch(console.error);
+    setInterval(() => refresh().catch(console.error), 3000);
+  </script>
+</body>
+</html>

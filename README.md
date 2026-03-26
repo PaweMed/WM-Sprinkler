@@ -1,75 +1,89 @@
 # WM Sprinkler
 
-WM Sprinkler is a firmware for a proprietary ESP32-based irrigation controller. The firmware provides a local web panel, saves schedules in the transmission, and allows for shared or automatic zone control.
+WM Sprinkler to autorski sterownik nawadniania na `ESP32`. Firmware udostępnia lokalny panel WWW, zapisuje harmonogramy w urządzeniu i pozwala sterować strefami ręcznie albo automatycznie.
 
-## What to flash to a clean ESP32
+## Co jest w repo
 
-First run these files:
+- `src/` - firmware dla `ESP32`
+- `smartplug_bwshp6/` - firmware dla smart gniazdka `BW-SHP6` (`ESP8266`)
+- `data/` - pliki lokalnego panelu WWW (`LittleFS`)
+- `cloud/` - opcjonalny backend i panel cloud
+- `scripts/` - skrypty pomocnicze
+- `dist/` - przykładowe gotowe pliki `.bin`
+- `platformio.ini` - konfiguracja PlatformIO
+
+## Co wgrać na czyste ESP32
+
+Na pierwsze uruchomienie potrzebujesz tych plików:
 
 - `bootloader.bin`
 - `partitions.bin`
 - `firmware.bin`
 - `littlefs.bin`
 
-## Simplest flash (IO Platform)
+Jeśli budujesz projekt lokalnie, znajdziesz je po kompilacji w:
 
-Build Project:
+- `.pio/build/esp32dev/bootloader.bin`
+- `.pio/build/esp32dev/partitions.bin`
+- `.pio/build/esp32dev/firmware.bin`
+- `.pio/build/esp32dev/littlefs.bin`
 
-"beating"
+## Najprostsze wgranie (PlatformIO)
+
+Zbuduj projekt:
+
+```bash
 pio run -e esp32dev
 pio run -e esp32dev -t buildfs
 ```
 
-Flash to the board via USB:
+Wgraj na płytkę po USB:
 
-"beating"
+```bash
 pio run -e esp32dev -t upload
 pio run -e esp32dev -t uploadfs
 ```
 
-This is the simplest and recommended method. "upload" will flash the bootloader, partitions, and firmware, and "uploadfs" will flash the local web panel to "LittleFS".
+To jest najprostsza i zalecana metoda. `upload` wgra bootloader, partycje i firmware, a `uploadfs` wgra lokalny panel WWW do `LittleFS`.
 
-If `pio` is not in the `PATH`, it applies to:
+Jeśli `pio` nie jest w `PATH`, użyj:
 
-,,beating
+```bash
 ~/.platformio/penv/bin/pio run -e esp32dev
 ~/.platformio/penv/bin/pio run -e esp32dev -t buildfs
 ~/.platformio/penv/bin/pio run -e esp32dev -t upload
 ~/.platformio/penv/bin/pio run -e esp32dev -t uploadfs
 ```
 
-## Manually Uploading Files
+## Ręczne wgranie plików
 
-If you want to flash the firmware, upload these files to the following offsets:
+Jeśli chcesz flashować ręcznie, wgraj te pliki pod takie offsety:
 
 - `0x1000` -> `bootloader.bin`
 - `0x8000` -> `partitions.bin`
 - `0x10000` -> `firmware.bin`
 - `0x2d0000` -> `littlefs.bin`
 
-Example:
+Przykład:
 
-,,beating
+```bash
 esptool.py --chip esp32 --port /dev/cu.usbserial-XXXX --baud 921600 write_flash -z \
-0x1000 bootloader.bin \
-0x8000 partition.bin \
-Firmware 0x10000.bin \
-0x2d0000 Littlefs.bin
+  0x1000 bootloader.bin \
+  0x8000 partitions.bin \
+  0x10000 firmware.bin \
+  0x2d0000 littlefs.bin
 ```
 
-## First boot
+## Pierwsze uruchomienie
 
-After the first boot, the device does not yet have a Wi-Fi network available, it switches to AP mode and an additional local Wi-Fi configuration panel. The AP password is 12345678.
+Po pierwszym starcie, jeśli urządzenie nie ma jeszcze zapisanej sieci Wi-Fi, przejdzie w tryb AP i pokaże lokalny panel konfiguracji Wi-Fi. Po podłączeniu do sieci możesz wejść na panel urządzenia z przeglądarki i ustawić:
 
-After connecting to the network, access the device panel, allowing configuration and installation of the IP device:
+- nazwy stref
+- harmonogramy
+- ustawienia pracy
 
-- zone name
-- schedule
-- operating settings
+## Ważne
 
-## Important
-
-- always use files from the same build
-- for OTA updates, upload `firmware.bin` first, then `littlefs.bin`
-
-Cloud access: https://wmsprinkler.pl
+- zawsze używaj plików z tego samego buildu
+- przy aktualizacji OTA wgrywaj najpierw `firmware.bin`, potem `littlefs.bin`
+- repo nie zawiera sekretów ani plików produkcyjnych (`.env`, hasła, tokeny)

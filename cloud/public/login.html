@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="google-site-verification" content="QS1Qp80PkH4yK8m4U77EDuKbvADd1_imUVzMtK9BQxU" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <title>WM Sprinkler</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg,#3b82f6,#34d399);
+      color: #fff;
+      overflow: auto;
+    }
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      transition: opacity .45s ease;
+    }
+    .splash {
+      z-index: 2;
+      text-align: center;
+    }
+    .logo {
+      width: clamp(140px, 30vw, 234px);
+      height: auto;
+      opacity: .95;
+      filter: drop-shadow(0 6px 20px rgba(0,0,0,.18));
+    }
+    .brand {
+      margin-top: 20px;
+      font-size: clamp(28px, 4.5vw, 44px);
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: .2px;
+      text-shadow: 0 8px 26px rgba(0,0,0,.18);
+    }
+    .sub {
+      margin-top: 10px;
+      font-size: 16px;
+      opacity: .85;
+    }
+    .auth-wrap {
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
+      padding: 16px;
+    }
+    .auth-box {
+      position: relative;
+      width: min(92vw, 390px);
+    }
+    .auth-logo {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 18px);
+      transform: translateX(-50%);
+      width: clamp(140px, 30vw, 234px);
+      height: auto;
+      opacity: .95;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,.2));
+    }
+    .auth-visible .auth-wrap {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .auth-visible .splash {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .card {
+      width: 100%;
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.24);
+      color: #111;
+    }
+    h1 { margin: 0 0 16px; font-size: 22px; color: #111; }
+    p { margin: 0 0 16px; color: #555; }
+    input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: 0;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+    }
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0 10px;
+      font-size: 14px;
+      color: #374151;
+      user-select: none;
+    }
+    .remember-row input {
+      width: auto;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      accent-color: #2563eb;
+      transform: translateY(1px);
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .alt { background: #059669; }
+    .msg { min-height: 20px; margin-top: 8px; color: #dc2626; font-size: 14px; }
+    .signature {
+      position: fixed;
+      right: 16px;
+      bottom: 14px;
+      z-index: 4;
+      color: rgba(255, 255, 255, 0.94);
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+      user-select: none;
+    }
+    @media (max-width: 768px) {
+      .screen { padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)); }
+      .auth-wrap { padding-top: 26px; }
+      .auth-logo { bottom: calc(100% + 10px); width: clamp(128px, 42vw, 176px); }
+      .logo { width: clamp(150px, 48vw, 210px); }
+      .brand { font-size: clamp(24px, 8vw, 34px); margin-top: 14px; }
+      .sub { font-size: 14px; margin-top: 8px; }
+      .card { padding: 18px; border-radius: 12px; }
+      h1 { font-size: 20px; margin-bottom: 12px; }
+      p { margin-bottom: 12px; font-size: 14px; }
+      input, button { padding: 11px 10px; }
+      .row { grid-template-columns: 1fr; gap: 8px; }
+      .signature { right: 12px; bottom: 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen splash" id="splash">
+    <div>
+      <img class="logo" src="/assets/logo-optimized-BnrUG8xa.png" alt="WeatherMap Sprinkler logo" />
+      <div class="brand">WeatherMap Sprinkler</div>
+      <div class="sub" id="splashSub">System nawadniania</div>
+    </div>
+  </div>
+
+  <div class="screen auth-wrap" id="authWrap">
+    <div class="auth-box">
+      <img class="auth-logo" src="/assets/logo-optimized-BnrUG8xa.png" alt="WeatherMap Sprinkler logo" />
+      <div class="card">
+        <p id="authHint">Zaloguj się do konta.</p>
+        <form id="authForm">
+          <input id="email" name="username" type="text" placeholder="email lub login" autocomplete="username" autocapitalize="none" autofocus />
+          <input id="password" name="password" type="password" placeholder="hasło" autocomplete="current-password" />
+          <label class="remember-row" for="rememberMe">
+            <input id="rememberMe" type="checkbox" checked />
+            <span id="rememberLabel">Zapamiętaj mnie na tym urządzeniu</span>
+          </label>
+          <div class="row">
+            <button id="loginBtn" type="submit">Zaloguj</button>
+            <button id="registerBtn" class="alt" type="button">Załóż konto</button>
+          </div>
+        </form>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="signature">PaweMed 2026</div>
+
+  <script>
+    const supportedLanguages = ["pl", "en", "de", "es"];
+    const fallbackLanguage = "en";
+    const languageCookieKey = "wms_lang";
+    const languageStorageKeys = ["wm-landing-language", "wm-language", "wms_lang"];
+    const loginI18n = {
+      pl: {
+        title: "WM Sprinkler | Logowanie",
+        logoAlt: "Logo WeatherMap Sprinkler",
+        splashSub: "System nawadniania",
+        authHint: "Zaloguj się do konta.",
+        emailPlaceholder: "email lub login",
+        passwordPlaceholder: "hasło",
+        rememberLabel: "Zapamiętaj mnie na tym urządzeniu",
+        loginBtn: "Zaloguj",
+        registerBtn: "Załóż konto",
+        loginError: "Błąd logowania"
+      },
+      en: {
+        title: "WM Sprinkler | Sign in",
+        logoAlt: "WeatherMap Sprinkler logo",
+        splashSub: "Irrigation system",
+        authHint: "Sign in to your account.",
+        emailPlaceholder: "email or username",
+        passwordPlaceholder: "password",
+        rememberLabel: "Remember me on this device",
+        loginBtn: "Sign in",
+        registerBtn: "Create account",
+        loginError: "Sign-in error"
+      },
+      de: {
+        title: "WM Sprinkler | Anmeldung",
+        logoAlt: "WeatherMap Sprinkler-Logo",
+        splashSub: "Bewässerungssystem",
+        authHint: "Melde dich in deinem Konto an.",
+        emailPlaceholder: "E-Mail oder Login",
+        passwordPlaceholder: "Passwort",
+        rememberLabel: "Auf diesem Gerät angemeldet bleiben",
+        loginBtn: "Anmelden",
+        registerBtn: "Konto erstellen",
+        loginError: "Anmeldefehler"
+      },
+      es: {
+        title: "WM Sprinkler | Iniciar sesión",
+        logoAlt: "Logotipo de WeatherMap Sprinkler",
+        splashSub: "Sistema de riego",
+        authHint: "Inicia sesión en tu cuenta.",
+        emailPlaceholder: "correo o usuario",
+        passwordPlaceholder: "contraseña",
+        rememberLabel: "Recordarme en este dispositivo",
+        loginBtn: "Iniciar sesión",
+        registerBtn: "Crear cuenta",
+        loginError: "Error de inicio de sesión"
+      }
+    };
+
+    function readCookie(name) {
+      const encodedName = `${encodeURIComponent(name)}=`;
+      const source = String(document.cookie || "");
+      const row = source.split(";").map((x) => x.trim()).find((x) => x.startsWith(encodedName));
+      if (!row) return "";
+      try {
+        return decodeURIComponent(row.slice(encodedName.length));
+      } catch {
+        return "";
+      }
+    }
+
+    function writeLangCookie(lang) {
+      const maxAgeSeconds = 60 * 60 * 24 * 365 * 2;
+      const securePart = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `${encodeURIComponent(languageCookieKey)}=${encodeURIComponent(lang)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${securePart}`;
+    }
+
+    function normalizeLang(value) {
+      const candidate = String(value || "").trim().toLowerCase();
+      return supportedLanguages.includes(candidate) ? candidate : "";
+    }
+
+    function languageFromStorage() {
+      for (const key of languageStorageKeys) {
+        try {
+          const value = normalizeLang(localStorage.getItem(key));
+          if (value) return value;
+        } catch {}
+      }
+      return "";
+    }
+
+    function languageFromNavigator() {
+      const raw = Array.isArray(navigator.languages) && navigator.languages.length ? navigator.languages : [navigator.language];
+      for (const item of raw) {
+        const base = String(item || "").toLowerCase().split("-")[0];
+        const normalized = normalizeLang(base);
+        if (normalized) return normalized;
+      }
+      return "";
+    }
+
+    const activeLanguage = normalizeLang(readCookie(languageCookieKey))
+      || languageFromStorage()
+      || languageFromNavigator()
+      || fallbackLanguage;
+    const rememberStorageKey = "wms_remembered_credentials_v1";
+
+    function loadRememberedCredentials() {
+      try {
+        const raw = localStorage.getItem(rememberStorageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return null;
+        const email = String(parsed.email || "").trim();
+        const password = String(parsed.password || "");
+        if (!email || !password) return null;
+        return { email, password };
+      } catch {
+        return null;
+      }
+    }
+
+    function saveRememberedCredentials(email, password) {
+      if (location.protocol !== "https:") return;
+      const payload = {
+        email: String(email || "").trim(),
+        password: String(password || ""),
+        savedAt: Date.now()
+      };
+      if (!payload.email || !payload.password) return;
+      try { localStorage.setItem(rememberStorageKey, JSON.stringify(payload)); } catch {}
+    }
+
+    function clearRememberedCredentials() {
+      try { localStorage.removeItem(rememberStorageKey); } catch {}
+    }
+
+    const tr = loginI18n[activeLanguage] || loginI18n[fallbackLanguage];
+    writeLangCookie(activeLanguage);
+    document.documentElement.lang = activeLanguage;
+    document.title = tr.title;
+    document.querySelectorAll(".logo, .auth-logo").forEach((img) => { img.alt = tr.logoAlt; });
+    document.getElementById("splashSub").textContent = tr.splashSub;
+    document.getElementById("authHint").textContent = tr.authHint;
+    document.getElementById("email").placeholder = tr.emailPlaceholder;
+    document.getElementById("password").placeholder = tr.passwordPlaceholder;
+    document.getElementById("rememberLabel").textContent = tr.rememberLabel;
+    document.getElementById("loginBtn").textContent = tr.loginBtn;
+    document.getElementById("registerBtn").textContent = tr.registerBtn;
+    const remembered = loadRememberedCredentials();
+    if (remembered) {
+      document.getElementById("email").value = remembered.email;
+      document.getElementById("password").value = remembered.password;
+      const rememberEl = document.getElementById("rememberMe");
+      if (rememberEl) rememberEl.checked = true;
+    }
+
+    setTimeout(() => document.body.classList.add("auth-visible"), 1200);
+
+    const msg = document.getElementById("msg");
+    async function call(path) {
+      msg.textContent = "";
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const remember = !!document.getElementById("rememberMe")?.checked;
+      const r = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, remember })
+      });
+      const data = await r.json();
+      if (!r.ok || !data.ok) {
+        msg.textContent = data.error || tr.loginError;
+        return;
+      }
+      if (remember) saveRememberedCredentials(email, password);
+      else clearRememberedCredentials();
+      location.href = data.redirect || "/";
+    }
+    document.getElementById("authForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      call("/api/login");
+    });
+    document.getElementById("registerBtn").onclick = () => call("/api/register");
+  </script>
+</body>
+</html>

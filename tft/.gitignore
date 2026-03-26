@@ -1,0 +1,6 @@
+.DS_Store
+.pio/
+.vscode/
+cloud/node_modules/
+cloud/.env
+cloud/storage/db.json

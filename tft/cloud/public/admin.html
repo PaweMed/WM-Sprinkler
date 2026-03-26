@@ -1,0 +1,2047 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <title>WM Sprinkler - Panel Admin</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg,#3b82f6,#34d399);
+      background-attachment: fixed;
+      color: #111827;
+      padding-bottom: 78px;
+    }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #ffffffd9;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 16px;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .subtitle {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-red { background: #dc2626; }
+    .btn-gray { background: #6b7280; }
+    .btn-green { background: #16a34a; }
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 14px 16px;
+    }
+    .section-title {
+      margin: 4px 2px 10px;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,.2);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .stat {
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      text-align: center;
+    }
+    .stat .n {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .stat .l {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 4px 16px rgba(17, 24, 39, 0.06);
+    }
+    .email {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      word-break: break-word;
+      margin-bottom: 8px;
+    }
+    .id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #9ca3af;
+      box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.16);
+    }
+    .s-online .dot { background: #16a34a; box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.16); }
+    .s-watering .dot { background: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16); }
+    .s-offline .dot { background: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14); }
+    .meta {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.45;
+    }
+    .empty {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 22px;
+      text-align: center;
+      color: #6b7280;
+    }
+    .updates-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #4b5563;
+    }
+    input[type="text"], input[type="month"], select, textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 9px;
+      padding: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+    input[type="file"] {
+      width: 100%;
+      font-size: 13px;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 12px;
+    }
+    .chip-list {
+      max-height: 160px;
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 9px;
+      padding: 8px;
+      background: #f9fafb;
+    }
+    .chip-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+    .list-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #fff;
+    }
+    .firmware-item {
+      position: relative;
+      padding-right: 44px;
+    }
+    .campaign-item {
+      position: relative;
+      padding-right: 44px;
+    }
+    .campaign-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 0;
+      line-height: 1;
+    }
+    .campaign-delete:hover { background: #fecaca; }
+    .campaign-delete:disabled { opacity: .55; cursor: default; }
+    .campaign-delete svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+      display: block;
+    }
+    .list-item .title-line {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .list-item .sub-line {
+      margin-top: 3px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #e5e7eb;
+      color: #374151;
+      margin-left: 6px;
+      text-transform: uppercase;
+    }
+    .tag.green { background: #dcfce7; color: #166534; }
+    .tag.blue { background: #dbeafe; color: #1d4ed8; }
+    .tag.red { background: #fee2e2; color: #b91c1c; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 66px;
+      background: #fff;
+      border-top: 1px solid #d1d5db;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 8;
+    }
+    .nav-item {
+      border: 0;
+      background: transparent;
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .nav-item.active { color: #2563eb; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 78px;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      max-width: 92vw;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      width: min(92vw, 520px);
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 18px 60px rgba(0,0,0,.26);
+      padding: 16px;
+    }
+    .modal-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .modal-sub {
+      margin: 0 0 12px;
+      color: #6b7280;
+      font-size: 13px;
+      word-break: break-word;
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg,#16a34a,#22c55e);
+      transition: width .12s ease;
+    }
+    .modal-meta {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .modal-actions {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .modal-actions .btn { width: auto; }
+    .stats-controls {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .stats-controls .field {
+      margin-bottom: 0;
+      min-width: 180px;
+    }
+    .stats-kpis {
+      margin-top: 12px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .kpi-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .kpi-card .n {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .kpi-card .l {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+    }
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      font-size: 13px;
+    }
+    .stats-table th,
+    .stats-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .stats-table th {
+      background: #f9fafb;
+      color: #374151;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .stats-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+    .stats-table .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .stats-empty {
+      margin-top: 10px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .stats-table .live-tag {
+      display: inline-block;
+      margin-left: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border-radius: 999px;
+      padding: 1px 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .stats-modal-card {
+      width: min(96vw, 980px);
+    }
+    .chart-wrap {
+      margin-top: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      padding: 10px 12px 14px;
+    }
+    .chart-bars {
+      height: 240px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .chart-col {
+      flex: 1 1 0;
+      min-width: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .chart-col .bar {
+      width: 100%;
+      min-height: 2px;
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(180deg, #22c55e 0%, #0ea5e9 100%);
+    }
+    .chart-col .value {
+      font-size: 10px;
+      line-height: 1;
+      color: #4b5563;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-align: center;
+      white-space: nowrap;
+      width: 100%;
+      min-height: 10px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      flex-shrink: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .chart-col .value.is-hidden {
+      visibility: hidden;
+    }
+    .chart-col.zero .bar {
+      background: #d1d5db;
+    }
+    .chart-col .label {
+      font-size: 10px;
+      color: #6b7280;
+      text-align: center;
+      width: 100%;
+      line-height: 1.1;
+      min-height: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .chart-legend {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .updates-layout { grid-template-columns: 1fr; }
+      .title { font-size: 18px; }
+      .stats-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats-modal-card { width: min(96vw, 96vw); }
+      .chart-bars { gap: 4px; }
+    }
+    @media (max-width: 640px) {
+      .stats-controls .field { min-width: 100%; }
+      .stats-kpis { grid-template-columns: 1fr 1fr; }
+      .chart-wrap { padding: 8px; }
+      .chart-bars { height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <h1 class="title">WM Sprinkler Admin</h1>
+        <p class="subtitle" id="sessionInfo">Ładowanie sesji...</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-gray" id="refreshBtn" type="button">Odśwież</button>
+        <button class="btn btn-red" id="logoutBtn" type="button">Wyloguj</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="section-devices" class="section active">
+      <h2 class="section-title">Urządzenia</h2>
+      <section class="stats" id="stats">
+        <div class="stat"><span class="n" id="stAll">0</span><span class="l">Urządzenia</span></div>
+        <div class="stat"><span class="n" id="stOnline">0</span><span class="l">Online</span></div>
+        <div class="stat"><span class="n" id="stWatering">0</span><span class="l">Podlewa</span></div>
+        <div class="stat"><span class="n" id="stOffline">0</span><span class="l">Offline</span></div>
+      </section>
+      <section id="grid" class="grid"></section>
+      <section id="empty" class="empty" style="display:none;">Brak urządzeń przypisanych do użytkowników.</section>
+    </section>
+
+    <section id="section-updates" class="section">
+      <h2 class="section-title">Aktualizacje</h2>
+      <div class="updates-layout">
+        <article class="card">
+          <h3 style="margin:0 0 10px;">Nowy firmware</h3>
+          <div class="field">
+            <label for="fwVersion">Wersja</label>
+            <input id="fwVersion" type="text" placeholder="np. 1.0.4" />
+          </div>
+          <div class="field">
+            <label for="fwChannel">Kanał</label>
+            <select id="fwChannel">
+              <option value="stable">stable</option>
+              <option value="beta">beta</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fwHardware">Hardware</label>
+            <select id="fwHardware">
+              <option value="esp32">ESP32</option>
+              <option value="esp32c6">ESP32-C6</option>
+              <option value="sonoff4ch">SONOFF 4CH</option>
+              <option value="bwshp6">BW-SHP6 (ESP8266)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fwNotes">Opis zmian</label>
+            <textarea id="fwNotes" placeholder="Krótki opis release..."></textarea>
+          </div>
+          <div class="field">
+            <label for="fwFile">Plik .bin</label>
+            <input id="fwFile" type="file" accept=".bin,application/octet-stream" />
+          </div>
+          <div class="row">
+            <button class="btn btn-green" id="uploadBtn" type="button">Wyślij firmware</button>
+            <span class="muted" id="uploadInfo"></span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3 style="margin:0 0 10px;">Nowa kampania OTA</h3>
+          <div class="field">
+            <label for="campaignFirmware">Wersja firmware</label>
+            <select id="campaignFirmware"></select>
+          </div>
+          <div class="field">
+            <label for="campaignTarget">Cel kampanii</label>
+            <select id="campaignTarget">
+              <option value="all-online">Wszystkie online</option>
+              <option value="selected">Wybrane urządzenia</option>
+            </select>
+          </div>
+          <div class="field" id="selectedDevicesWrap" style="display:none;">
+            <label>Wybór urządzeń</label>
+            <div id="selectedDevices" class="chip-list"></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-green" id="createCampaignBtn" type="button">Utwórz kampanię</button>
+            <span class="muted" id="campaignInfo"></span>
+          </div>
+        </article>
+      </div>
+
+      <div class="updates-layout" style="margin-top:12px;">
+        <article class="card">
+          <h3 style="margin:0 0 10px;">Dostępne firmware</h3>
+          <div id="firmwareList" class="list"></div>
+        </article>
+        <article class="card">
+          <h3 style="margin:0 0 10px;">Kampanie OTA</h3>
+          <div id="campaignList" class="list"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="section-stats" class="section">
+      <h2 class="section-title">Statystyki</h2>
+      <article class="card">
+        <div class="stats-controls">
+          <div class="field">
+            <label for="statsMonth">Miesiąc</label>
+            <input id="statsMonth" type="month" />
+          </div>
+          <div class="field">
+            <label for="statsDeviceFilter">Urządzenie</label>
+            <select id="statsDeviceFilter">
+              <option value="">Wszystkie urządzenia</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="btn btn-gray" id="statsRefreshBtn" type="button">Odśwież</button>
+            <button class="btn btn-green" id="statsExportBtn" type="button">Eksport CSV</button>
+          </div>
+        </div>
+      </article>
+
+      <section class="stats-kpis">
+        <article class="kpi-card"><span class="n" id="kpiTotalDuration">00:00</span><span class="l">Łączny czas</span></article>
+        <article class="kpi-card"><span class="n" id="kpiSessions">0</span><span class="l">Liczba sesji</span></article>
+        <article class="kpi-card"><span class="n" id="kpiAvgSession">00:00</span><span class="l">Średnia sesja</span></article>
+        <article class="kpi-card"><span class="n" id="kpiMaxSession">00:00</span><span class="l">Najdłuższa sesja</span></article>
+      </section>
+
+      <article class="card">
+        <div class="table-wrap">
+          <table class="stats-table" aria-label="Miesięczne statystyki podlewania">
+            <thead>
+              <tr>
+                <th>Urządzenie</th>
+                <th>Właściciel</th>
+                <th>Sesje</th>
+                <th>Łączny czas</th>
+                <th>Śr. sesja</th>
+                <th>Najdłuższa</th>
+                <th>Ostatnie podlewanie</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody id="statsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="stats-empty" id="statsTableEmpty" style="display:none;">Brak sesji podlewania dla wybranego miesiąca.</div>
+      </article>
+    </section>
+
+    <section id="section-users" class="section">
+      <h2 class="section-title">Użytkownicy</h2>
+      <article class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end;">
+          <div style="flex:1; min-width:220px;">
+            <div class="field" style="margin-bottom:0;">
+              <label for="usersSearch">Szukaj (email lub ID)</label>
+              <input id="usersSearch" type="text" placeholder="np. rychu@domek.pl lub WMS_12345" />
+            </div>
+          </div>
+          <div style="width:200px;">
+            <div class="field" style="margin-bottom:0;">
+              <label for="usersFilter">Filtr</label>
+              <select id="usersFilter">
+                <option value="all">Wszyscy</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+                <option value="has-device">Z urządzeniem</option>
+                <option value="no-device">Bez urządzenia</option>
+              </select>
+            </div>
+          </div>
+          <div class="muted" style="margin-left:auto;">Wyników: <b id="usersCount">0</b></div>
+        </div>
+      </article>
+
+      <div style="height:12px;"></div>
+      <section id="usersGrid" class="grid"></section>
+      <section id="usersEmpty" class="empty" style="display:none;">Brak użytkowników.</section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Nawigacja administratora">
+    <button class="nav-item active" type="button" data-tab="devices">Urządzenia</button>
+    <button class="nav-item" type="button" data-tab="updates">Aktualizacje</button>
+    <button class="nav-item" type="button" data-tab="stats">Statystyki</button>
+    <button class="nav-item" type="button" data-tab="users">Użytkownicy</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <div class="modal" id="uploadModal" role="dialog" aria-modal="true" aria-label="Upload firmware">
+    <div class="modal-card">
+      <h3 class="modal-title">Wysyłanie firmware</h3>
+      <p class="modal-sub" id="uploadModalSub">Przygotowanie...</p>
+      <div class="progress" aria-label="Postęp uploadu"><div id="uploadBar"></div></div>
+      <div class="modal-meta">
+        <span id="uploadPct">0%</span>
+        <span id="uploadBytes">0 / 0 MB</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-gray" id="uploadHideBtn" type="button">Ukryj</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="statsChartModal" role="dialog" aria-modal="true" aria-label="Wykres statystyk podlewania">
+    <div class="modal-card stats-modal-card">
+      <h3 class="modal-title" id="statsModalTitle">Wykres podlewania</h3>
+      <p class="modal-sub" id="statsModalSub">Ładowanie danych...</p>
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+        <div class="field" style="margin-bottom:0; width:220px;">
+          <label for="statsChartGroup">Widok</label>
+          <select id="statsChartGroup">
+            <option value="daily">Dziennie</option>
+            <option value="weekly">Tygodniowo</option>
+            <option value="monthly">Miesięcznie</option>
+            <option value="yearly">Rocznie</option>
+          </select>
+        </div>
+        <div class="row">
+          <button class="btn btn-green" id="statsChartExportBtn" type="button">Eksport CSV</button>
+          <button class="btn btn-gray" id="statsChartCloseBtn" type="button">Zamknij</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-bars" id="statsChartBars"></div>
+        <div class="chart-legend" id="statsChartLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sessionInfo = document.getElementById("sessionInfo");
+    const toast = document.getElementById("toast");
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const firmwareList = document.getElementById("firmwareList");
+    const campaignList = document.getElementById("campaignList");
+    const campaignFirmware = document.getElementById("campaignFirmware");
+    const campaignTarget = document.getElementById("campaignTarget");
+    const selectedDevicesWrap = document.getElementById("selectedDevicesWrap");
+    const selectedDevices = document.getElementById("selectedDevices");
+    const uploadInfo = document.getElementById("uploadInfo");
+    const campaignInfo = document.getElementById("campaignInfo");
+    const uploadModal = document.getElementById("uploadModal");
+    const uploadModalSub = document.getElementById("uploadModalSub");
+    const uploadBar = document.getElementById("uploadBar");
+    const uploadPct = document.getElementById("uploadPct");
+    const uploadBytes = document.getElementById("uploadBytes");
+    const uploadHideBtn = document.getElementById("uploadHideBtn");
+    const fwHardware = document.getElementById("fwHardware");
+    const statsMonthInput = document.getElementById("statsMonth");
+    const statsDeviceFilter = document.getElementById("statsDeviceFilter");
+    const statsRefreshBtn = document.getElementById("statsRefreshBtn");
+    const statsExportBtn = document.getElementById("statsExportBtn");
+    const statsTableBody = document.getElementById("statsTableBody");
+    const statsTableEmpty = document.getElementById("statsTableEmpty");
+    const kpiTotalDuration = document.getElementById("kpiTotalDuration");
+    const kpiSessions = document.getElementById("kpiSessions");
+    const kpiAvgSession = document.getElementById("kpiAvgSession");
+    const kpiMaxSession = document.getElementById("kpiMaxSession");
+    const statsChartModal = document.getElementById("statsChartModal");
+    const statsModalTitle = document.getElementById("statsModalTitle");
+    const statsModalSub = document.getElementById("statsModalSub");
+    const statsChartBars = document.getElementById("statsChartBars");
+    const statsChartLegend = document.getElementById("statsChartLegend");
+    const statsChartGroup = document.getElementById("statsChartGroup");
+    const statsChartExportBtn = document.getElementById("statsChartExportBtn");
+    const statsChartCloseBtn = document.getElementById("statsChartCloseBtn");
+
+    let toastTimer = null;
+    let appState = { devices: [], firmwares: [], otaCampaigns: [] };
+    let activeTab = "devices";
+    let userState = { users: [] };
+    let wateringStatsState = {
+      month: "",
+      selectedDeviceId: "",
+      rows: [],
+      summary: { sessions: 0, totalSec: 0, avgSec: 0, maxSec: 0 },
+      dailySeries: [],
+      availableDevices: [],
+    };
+    let statsChartState = {
+      deviceId: "",
+      month: "",
+      ownerEmail: "",
+      dailySeries: [],
+      grouping: "daily",
+      rangeMode: "month",
+      rangeLabel: "",
+    };
+    let statsChartLoadSeq = 0;
+    let statsLoadedOnce = false;
+    let uploadInFlight = false;
+    const OTA_REQUIRE_HARDWARE_REPORT_FROM = "2026-07-01T00:00:00+02:00";
+    const DEFAULT_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+    let idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS;
+    let idleDeadline = Date.now() + idleTimeoutMs;
+    let idleStopped = false;
+    let lastActivityEventTs = 0;
+    let lastTouchTs = 0;
+    let touchInFlight = false;
+
+    function fmtDate(ts) {
+      if (!ts) return "brak danych";
+      try { return new Date(ts).toLocaleString("pl-PL"); } catch { return ts; }
+    }
+    function fmtMB(bytes) {
+      const mb = Number(bytes || 0) / (1024 * 1024);
+      return mb.toFixed(mb >= 10 ? 0 : 1);
+    }
+    function fmtDurationShort(totalSec) {
+      const sec = Math.max(0, Number(totalSec || 0));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    }
+    function fmtDurationLong(totalSec) {
+      const sec = Math.max(0, Number(totalSec || 0));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+    function defaultMonthValue() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+    function chartGroupingLabel(grouping) {
+      const g = String(grouping || "").trim().toLowerCase();
+      if (g === "weekly") return "tygodniowy";
+      if (g === "monthly") return "miesięczny";
+      if (g === "yearly") return "roczny";
+      return "dzienny";
+    }
+    function chartRangeModeForGrouping(grouping) {
+      const g = String(grouping || "").trim().toLowerCase();
+      if (g === "monthly") return "year";
+      if (g === "yearly") return "all";
+      return "month";
+    }
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    function csvEscape(value) {
+      const raw = String(value ?? "");
+      if (/[",\r\n]/.test(raw)) return `"${raw.replace(/"/g, "\"\"")}"`;
+      return raw;
+    }
+    function downloadTextFile(fileName, content, type = "text/plain;charset=utf-8") {
+      const blob = new Blob([content], { type });
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(href);
+        a.remove();
+      }, 0);
+    }
+    function normalizeHardware(hw) {
+      const s = String(hw || "").trim().toLowerCase();
+      if (s === "esp32c6" || s === "esp32-c6" || s === "c6") return "esp32c6";
+      if (s === "esp32" || s === "esp-32" || s === "esp32dev") return "esp32";
+      if (s === "sonoff4ch" || s === "sonoff-4ch" || s === "sonoff_4ch" || s === "sonoff 4ch" || s === "sonof4ch" || s === "sonof-4ch") return "sonoff4ch";
+      if (s === "bwshp6" || s === "bw-shp6" || s === "bw_shp6" || s === "shp6" || s === "blitzwolf-shp6") return "bwshp6";
+      return "";
+    }
+    function hardwareLabel(hw) {
+      const id = normalizeHardware(hw);
+      if (id === "esp32c6") return "ESP32-C6";
+      if (id === "esp32") return "ESP32";
+      if (id === "sonoff4ch") return "SONOFF 4CH";
+      if (id === "bwshp6") return "BW-SHP6 (ESP8266)";
+      return "unknown";
+    }
+    function normalizeFirmwareTarget(target) {
+      const s = String(target || "firmware").trim().toLowerCase();
+      if (s === "fs" || s === "littlefs" || s === "spiffs" || s === "filesystem") return "fs";
+      return "firmware";
+    }
+    function firmwareTargetLabel(target) {
+      return normalizeFirmwareTarget(target) === "fs" ? "FS" : "FW";
+    }
+    function isHardwareReportRequiredNow() {
+      const ts = Date.parse(OTA_REQUIRE_HARDWARE_REPORT_FROM);
+      if (!Number.isFinite(ts)) return true;
+      return Date.now() >= ts;
+    }
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+    function resetIdleDeadline() {
+      idleDeadline = Date.now() + idleTimeoutMs;
+    }
+    async function logoutCurrentUser() {
+      if (idleStopped) return;
+      idleStopped = true;
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+      } catch {}
+      location.href = "/";
+    }
+    async function touchSession(force = false) {
+      if (touchInFlight) return;
+      const now = Date.now();
+      if (!force && now - lastTouchTs < 60 * 1000) return;
+      touchInFlight = true;
+      lastTouchTs = now;
+      try {
+        const r = await fetch("/api/session/touch", { method: "POST", credentials: "same-origin" });
+        if (r.status === 401) { await logoutCurrentUser(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+          resetIdleDeadline();
+        }
+      } catch {
+        // bez zmian; wygaśnięcie obsłuży timer bezczynności
+      } finally {
+        touchInFlight = false;
+      }
+    }
+    async function primeIdleSession() {
+      try {
+        const r = await fetch("/api/session", { credentials: "same-origin" });
+        if (r.status === 401) { await logoutCurrentUser(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+        }
+      } catch {}
+      resetIdleDeadline();
+      touchSession(true);
+    }
+    function bindIdleSessionHandlers() {
+      const onActivity = () => {
+        const now = Date.now();
+        if (now - lastActivityEventTs < 1000) return;
+        lastActivityEventTs = now;
+        resetIdleDeadline();
+        touchSession(false);
+      };
+      ["pointerdown", "keydown", "touchstart", "mousedown", "wheel", "scroll"].forEach((evt) => {
+        window.addEventListener(evt, onActivity, { passive: true });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) onActivity();
+      });
+      setInterval(() => {
+        if (Date.now() >= idleDeadline) logoutCurrentUser();
+      }, 1000);
+    }
+
+    function showUploadModal(fileName) {
+      uploadModalSub.textContent = fileName ? fileName : "Wysyłanie...";
+      uploadBar.style.width = "0%";
+      uploadPct.textContent = "0%";
+      uploadBytes.textContent = "0 / 0 MB";
+      uploadModal.classList.add("show");
+    }
+    function updateUploadModal(loaded, total) {
+      const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((loaded * 100) / total))) : 0;
+      uploadBar.style.width = pct + "%";
+      uploadPct.textContent = pct + "%";
+      if (total > 0) uploadBytes.textContent = `${fmtMB(loaded)} / ${fmtMB(total)} MB`;
+      else uploadBytes.textContent = `${fmtMB(loaded)} MB`;
+    }
+    function hideUploadModal() {
+      uploadModal.classList.remove("show");
+    }
+    function apiUrl(path) {
+      // Safari can throw "The string did not match the expected pattern" for malformed URLs.
+      // Always build absolute URLs.
+      try {
+        const origin = String(location.origin || "").trim();
+        const p = String(path || "").trim();
+        if (!origin || !p) throw new Error("empty origin/path");
+        return new URL(p, origin).toString();
+      } catch (e) {
+        // Add details to help debugging on Safari.
+        throw new Error(`Bad URL (origin=${location.origin}, path=${path}): ${e && e.message ? e.message : e}`);
+      }
+    }
+    async function apiPost(path, bodyObj) {
+      const url = apiUrl(path);
+      try {
+        return await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bodyObj || {}),
+          credentials: "same-origin",
+        });
+      } catch (e) {
+        // Surface URL for Safari debugging.
+        throw new Error(`Fetch failed: ${e && e.message ? e.message : e} | url=${url}`);
+      }
+    }
+    async function readJsonOrText(r) {
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      if (ct.includes("application/json")) return await r.json();
+      const txt = await r.text();
+      return { ok: false, error: txt || `HTTP ${r.status}` };
+    }
+    function setTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll(".section").forEach((el) => el.classList.remove("active"));
+      const section = document.getElementById("section-" + tab);
+      if (section) section.classList.add("active");
+      document.querySelectorAll(".nav-item").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-tab") === tab);
+      });
+      if (tab === "stats" && !statsLoadedOnce) {
+        loadWateringStats({ silent: true }).catch(() => {});
+      }
+    }
+    function renderWateringKpis(summary) {
+      kpiTotalDuration.textContent = fmtDurationShort(summary.totalSec);
+      kpiSessions.textContent = String(summary.sessions);
+      kpiAvgSession.textContent = fmtDurationShort(summary.avgSec);
+      kpiMaxSession.textContent = fmtDurationShort(summary.maxSec);
+    }
+    function syncStatsDeviceFilter(availableDevices, preferredDeviceId = "") {
+      const prev = String(preferredDeviceId || statsDeviceFilter.value || "");
+      const options = Array.isArray(availableDevices) ? availableDevices : [];
+      const seen = new Set();
+      statsDeviceFilter.innerHTML = `<option value="">Wszystkie urządzenia</option>`;
+      options.forEach((item) => {
+        const deviceId = String(item?.deviceId || "").trim();
+        if (!deviceId || seen.has(deviceId)) return;
+        seen.add(deviceId);
+        const owner = String(item?.ownerEmail || "-");
+        const opt = document.createElement("option");
+        opt.value = deviceId;
+        opt.textContent = `${deviceId} (${owner})`;
+        statsDeviceFilter.appendChild(opt);
+      });
+      if (prev && seen.has(prev)) statsDeviceFilter.value = prev;
+      else statsDeviceFilter.value = "";
+    }
+    function renderWateringTable(rows) {
+      const items = Array.isArray(rows) ? rows : [];
+      statsTableBody.innerHTML = "";
+      if (!items.length) {
+        statsTableEmpty.style.display = "block";
+        return;
+      }
+      statsTableEmpty.style.display = "none";
+      items.forEach((row) => {
+        const tr = document.createElement("tr");
+        const liveTag = row.activeNow ? `<span class="live-tag">trwa</span>` : "";
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(row.deviceId)}${liveTag}</td>
+          <td>${escapeHtml(row.ownerEmail || "-")}</td>
+          <td>${Number(row.sessions || 0)}</td>
+          <td>${fmtDurationLong(row.totalSec)}</td>
+          <td>${fmtDurationLong(row.avgSec)}</td>
+          <td>${fmtDurationLong(row.maxSec)}</td>
+          <td>${fmtDate(row.lastWateringAt)}</td>
+          <td><button class="btn btn-gray" data-open-chart="${escapeHtml(row.deviceId)}" type="button" style="padding:6px 10px; font-size:12px;">Wykres</button></td>
+        `;
+        statsTableBody.appendChild(tr);
+      });
+      statsTableBody.querySelectorAll("[data-open-chart]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const deviceId = btn.getAttribute("data-open-chart");
+          if (deviceId) openStatsChart(deviceId);
+        });
+      });
+    }
+    async function loadWateringStats(options = {}) {
+      const month = String(statsMonthInput.value || defaultMonthValue());
+      const deviceId = String(statsDeviceFilter.value || "");
+      if (!statsMonthInput.value) statsMonthInput.value = month;
+      const params = new URLSearchParams();
+      params.set("month", month);
+      if (deviceId) params.set("deviceId", deviceId);
+      const r = await fetch(`/api/admin/stats/watering?${params.toString()}`, { credentials: "same-origin" });
+      if (r.status === 401) { location.href = "/"; return; }
+      if (r.status === 403) { location.href = "/devices"; return; }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || "Błąd API statystyk");
+
+      const rows = Array.isArray(d.rows) ? d.rows : [];
+      const summary = d.summary && typeof d.summary === "object"
+        ? d.summary
+        : { sessions: 0, totalSec: 0, avgSec: 0, maxSec: 0 };
+      const available = Array.isArray(d.availableDevices) ? d.availableDevices.slice() : [];
+      const known = new Set(available.map((x) => String(x?.deviceId || "")));
+      rows.forEach((row) => {
+        const id = String(row?.deviceId || "");
+        if (!id || known.has(id)) return;
+        known.add(id);
+        available.push({ deviceId: id, ownerEmail: String(row?.ownerEmail || "-"), hardware: String(row?.hardware || "unknown") });
+      });
+
+      wateringStatsState = {
+        month: String(d.month || month),
+        selectedDeviceId: String(deviceId || ""),
+        rows,
+        summary,
+        dailySeries: Array.isArray(d.dailySeries) ? d.dailySeries : [],
+        availableDevices: available,
+      };
+      statsMonthInput.value = wateringStatsState.month;
+      syncStatsDeviceFilter(available, deviceId);
+      renderWateringKpis(wateringStatsState.summary);
+      renderWateringTable(wateringStatsState.rows);
+      statsLoadedOnce = true;
+      if (!options.silent) showToast("Statystyki odświeżone");
+    }
+    function buildChartSeries(dailySeries, grouping) {
+      const items = Array.isArray(dailySeries) ? dailySeries : [];
+      if (grouping === "weekly") {
+        const grouped = [];
+        for (let i = 0; i < items.length; i += 7) {
+          const slice = items.slice(i, i + 7);
+          if (!slice.length) continue;
+          const total = slice.reduce((acc, item) => acc + Math.max(0, Number(item?.durationSec || 0)), 0);
+          grouped.push({
+            label: `T${Math.floor(i / 7) + 1}`,
+            fullLabel: `${slice[0].date} - ${slice[slice.length - 1].date}`,
+            value: total,
+          });
+        }
+        return grouped;
+      }
+      if (grouping === "monthly") {
+        const byMonth = new Map();
+        items.forEach((item) => {
+          const date = String(item?.date || "");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+          const key = date.slice(0, 7);
+          const sec = Math.max(0, Number(item?.durationSec || 0));
+          byMonth.set(key, (byMonth.get(key) || 0) + sec);
+        });
+        return Array.from(byMonth.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, value]) => ({
+            label: `${key.slice(5, 7)}/${key.slice(0, 4)}`,
+            fullLabel: key,
+            value,
+          }));
+      }
+      if (grouping === "yearly") {
+        const byYear = new Map();
+        items.forEach((item) => {
+          const date = String(item?.date || "");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+          const key = date.slice(0, 4);
+          const sec = Math.max(0, Number(item?.durationSec || 0));
+          byYear.set(key, (byYear.get(key) || 0) + sec);
+        });
+        return Array.from(byYear.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, value]) => ({ label: key, fullLabel: key, value }));
+      }
+      return items.map((item) => {
+        const date = String(item?.date || "");
+        const dayLabel = date.slice(-2);
+        const sec = Math.max(0, Number(item?.durationSec || 0));
+        return { label: dayLabel || "-", fullLabel: date || "-", value: sec };
+      });
+    }
+    function renderStatsChart() {
+      const grouping = String(statsChartGroup.value || "daily");
+      statsChartState.grouping = grouping;
+      const series = buildChartSeries(statsChartState.dailySeries, grouping);
+      statsChartBars.innerHTML = "";
+      if (!series.length) {
+        statsChartBars.innerHTML = `<div class="muted" style="padding:12px 6px;">Brak danych do wykresu.</div>`;
+        statsChartLegend.textContent = "";
+        return;
+      }
+      const maxValue = Math.max(1, ...series.map((x) => Math.max(0, Number(x.value || 0))));
+      const labelStep = Math.max(1, Math.ceil(series.length / 12));
+      const gapPx = Number.parseFloat(getComputedStyle(statsChartBars).gap || "6") || 6;
+      const approxColWidth = series.length > 0
+        ? ((statsChartBars.clientWidth - Math.max(0, series.length - 1) * gapPx) / series.length)
+        : 0;
+      const showBarValues = approxColWidth >= 18;
+      series.forEach((point, idx) => {
+        const value = Math.max(0, Number(point.value || 0));
+        const col = document.createElement("div");
+        col.className = `chart-col${value === 0 ? " zero" : ""}`;
+        col.title = `${point.fullLabel}: ${fmtDurationLong(value)}`;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const barHeightPx = Math.max(2, Math.round((value / maxValue) * 192));
+        bar.style.height = `${barHeightPx}px`;
+        const valueLabel = document.createElement("div");
+        valueLabel.className = "value";
+        if (showBarValues && value > 0) valueLabel.textContent = fmtDurationShort(value);
+        else valueLabel.classList.add("is-hidden");
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = (idx % labelStep === 0 || idx === series.length - 1) ? point.label : "";
+        col.appendChild(valueLabel);
+        col.appendChild(bar);
+        col.appendChild(label);
+        statsChartBars.appendChild(col);
+      });
+      const total = series.reduce((acc, p) => acc + p.value, 0);
+      const rangeLabel = String(statsChartState.rangeLabel || statsChartState.month || "-");
+      statsChartLegend.textContent = `Suma: ${fmtDurationLong(total)} | Max słupek: ${fmtDurationLong(maxValue)} | Widok: ${chartGroupingLabel(grouping)} | Zakres: ${rangeLabel}`;
+    }
+    async function loadStatsChartData(grouping) {
+      const deviceId = String(statsChartState.deviceId || "");
+      const month = String(statsChartState.month || statsMonthInput.value || defaultMonthValue());
+      if (!deviceId) return;
+      const rangeMode = chartRangeModeForGrouping(grouping);
+      const requestSeq = ++statsChartLoadSeq;
+      const params = new URLSearchParams();
+      params.set("month", month);
+      params.set("deviceId", deviceId);
+      params.set("rangeMode", rangeMode);
+      const r = await fetch(`/api/admin/stats/watering?${params.toString()}`, { credentials: "same-origin" });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || "Błąd danych wykresu");
+      if (requestSeq !== statsChartLoadSeq) return;
+      const row = Array.isArray(d.rows) ? d.rows.find((x) => String(x.deviceId) === deviceId) : null;
+      const rangeLabel = String(d.range?.label || month);
+      statsChartState = {
+        ...statsChartState,
+        ownerEmail: String(row?.ownerEmail || "-"),
+        dailySeries: Array.isArray(d.dailySeries) ? d.dailySeries : [],
+        grouping: String(grouping || "daily"),
+        rangeMode: String(d.range?.mode || rangeMode),
+        rangeLabel,
+      };
+      statsModalTitle.textContent = `Urządzenie ${deviceId} - ${rangeLabel}`;
+      statsModalSub.textContent = `Właściciel: ${statsChartState.ownerEmail} | Sesje: ${Number(row?.sessions || 0)} | Łącznie: ${fmtDurationLong(row?.totalSec || 0)}`;
+      renderStatsChart();
+    }
+    async function openStatsChart(deviceId) {
+      const month = String(statsMonthInput.value || defaultMonthValue());
+      statsModalTitle.textContent = `Urządzenie ${deviceId} - ${month}`;
+      statsModalSub.textContent = "Ładowanie danych...";
+      statsChartBars.innerHTML = "";
+      statsChartLegend.textContent = "";
+      statsChartModal.classList.add("show");
+      const grouping = String(statsChartGroup.value || "daily");
+      statsChartState = {
+        deviceId,
+        month,
+        ownerEmail: "-",
+        dailySeries: [],
+        grouping,
+        rangeMode: chartRangeModeForGrouping(grouping),
+        rangeLabel: month,
+      };
+      try {
+        await loadStatsChartData(grouping);
+      } catch (e) {
+        statsModalSub.textContent = "Nie udało się wczytać danych wykresu.";
+        statsChartBars.innerHTML = `<div class="muted" style="padding:12px 6px;">${escapeHtml(e.message || "Błąd odczytu danych")}</div>`;
+      }
+    }
+    function closeStatsChart() {
+      statsChartLoadSeq += 1;
+      statsChartModal.classList.remove("show");
+    }
+    function exportSummaryCsv() {
+      const rows = Array.isArray(wateringStatsState.rows) ? wateringStatsState.rows : [];
+      if (!rows.length) {
+        showToast("Brak danych do eksportu");
+        return;
+      }
+      const summary = wateringStatsState.summary || { sessions: 0, totalSec: 0, avgSec: 0, maxSec: 0 };
+      const lines = [];
+      lines.push(["Miesiąc", wateringStatsState.month]);
+      lines.push(["Liczba sesji", summary.sessions]);
+      lines.push(["Łączny czas (HH:MM)", fmtDurationShort(summary.totalSec)]);
+      lines.push(["Średnia sesja (HH:MM)", fmtDurationShort(summary.avgSec)]);
+      lines.push(["Max sesja (HH:MM)", fmtDurationShort(summary.maxSec)]);
+      lines.push([]);
+      lines.push(["Urządzenie", "Właściciel", "Sesje", "Łączny czas (HH:MM)", "Średnia sesja (HH:MM)", "Max sesja (HH:MM)", "Ostatnie podlewanie", "Aktywne teraz"]);
+      rows.forEach((row) => {
+        lines.push([
+          row.deviceId,
+          row.ownerEmail || "-",
+          Number(row.sessions || 0),
+          fmtDurationShort(row.totalSec || 0),
+          fmtDurationShort(row.avgSec || 0),
+          fmtDurationShort(row.maxSec || 0),
+          row.lastWateringAt || "",
+          row.activeNow ? "tak" : "nie",
+        ]);
+      });
+      const csv = lines.map((cols) => cols.map(csvEscape).join(",")).join("\n");
+      const month = String(wateringStatsState.month || defaultMonthValue());
+      downloadTextFile(`watering-stats_${month}_summary.csv`, `\uFEFF${csv}`, "text/csv;charset=utf-8");
+      showToast("Wyeksportowano CSV");
+    }
+    function exportChartCsv() {
+      if (!statsChartState.deviceId) {
+        showToast("Najpierw otwórz wykres urządzenia");
+        return;
+      }
+      const series = buildChartSeries(statsChartState.dailySeries, statsChartState.grouping || "daily");
+      if (!series.length) {
+        showToast("Brak danych do eksportu");
+        return;
+      }
+      const lines = [];
+      const grouping = String(statsChartState.grouping || "daily");
+      const mode = ["daily", "weekly", "monthly", "yearly"].includes(grouping) ? grouping : "daily";
+      lines.push(["Zakres", statsChartState.rangeLabel || statsChartState.month]);
+      lines.push(["Urządzenie", statsChartState.deviceId]);
+      lines.push(["Właściciel", statsChartState.ownerEmail || "-"]);
+      lines.push(["Widok", chartGroupingLabel(mode)]);
+      lines.push([]);
+      lines.push(["Okres", "Czas podlewania (HH:MM)"]);
+      series.forEach((item) => {
+        lines.push([item.fullLabel, fmtDurationShort(item.value)]);
+      });
+      const csv = lines.map((cols) => cols.map(csvEscape).join(",")).join("\n");
+      downloadTextFile(`watering-stats_${statsChartState.month}_${statsChartState.deviceId}_${mode}.csv`, `\uFEFF${csv}`, "text/csv;charset=utf-8");
+      showToast("Wyeksportowano CSV");
+    }
+    function updateStats(items) {
+      const all = items.length;
+      const online = items.filter((x) => x.online).length;
+      const watering = items.filter((x) => x.state === "podlewa").length;
+      const offline = all - online;
+      document.getElementById("stAll").textContent = String(all);
+      document.getElementById("stOnline").textContent = String(online);
+      document.getElementById("stWatering").textContent = String(watering);
+      document.getElementById("stOffline").textContent = String(offline);
+    }
+    async function setSmartClimateAccess(deviceId, enabled, btn) {
+      const did = String(deviceId || "").trim();
+      if (!did) return;
+      const oldText = btn ? btn.textContent : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = enabled ? "Włączanie..." : "Wyłączanie...";
+      }
+      try {
+        const r = await fetch(`/api/admin/devices/${encodeURIComponent(did)}/smart-climate-access`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ enabled }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d?.ok) throw new Error(d?.error || "Nie udało się zapisać dostępu WM Smart Climate");
+        await loadOverview();
+        showToast(enabled ? `WM Smart Climate: dostęp włączony dla ${did}` : `WM Smart Climate: dostęp wyłączony dla ${did}`);
+      } catch (e) {
+        showToast(e?.message || "Nie udało się zapisać dostępu WM Smart Climate");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = oldText;
+        }
+      }
+    }
+    function renderDeviceCards(items) {
+      grid.innerHTML = "";
+      if (!items.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+      items.forEach((x) => {
+        const card = document.createElement("article");
+        const cls = x.state === "podlewa" ? "s-watering" : (x.online ? "s-online" : "s-offline");
+        card.className = "card " + cls;
+        const statusText = x.state === "podlewa" ? "Online - podlewa" : (x.online ? "Online - bezczynny" : "Offline");
+        const hwText = hardwareLabel(x.hardware);
+        const fwText = String(x.firmwareVersion || "").trim() || "brak danych";
+        const smartClimateSupported = x.smartClimateSupported !== false;
+        const smartClimateAllowed = smartClimateSupported && x.smartClimateAllowed === true;
+        const smartClimateManagedZones = Number.isFinite(Number(x.smartClimateManagedZones)) ? Number(x.smartClimateManagedZones) : 0;
+        const smartClimateEngineEnabled = smartClimateSupported && x.smartClimateEngineEnabled === true;
+        const smartClimateLabel = smartClimateSupported
+          ? `dostęp ${smartClimateAllowed ? "ON" : "OFF"} | silnik ${smartClimateEngineEnabled ? "AKTYWNY" : "WSTRZYMANY"} | strefy ${smartClimateManagedZones}`
+          : "niedostępny (gniazdko)";
+        const smartClimateButton = smartClimateSupported
+          ? `<button class="btn ${smartClimateAllowed ? "btn-red" : "btn-green"}" data-smart-climate-device="${escapeHtml(x.deviceId)}" data-smart-climate-next="${smartClimateAllowed ? "off" : "on"}" type="button">${smartClimateAllowed ? "WM Smart Climate: Wyłącz dostęp" : "WM Smart Climate: Włącz dostęp"}</button>`
+          : `<button class="btn btn-gray" type="button" disabled>WM Smart Climate: niedostępne</button>`;
+        card.innerHTML = `
+          <div class="email">${x.ownerEmail}</div>
+          <div class="id">${x.deviceId}</div>
+          <div class="status"><span class="dot"></span>${statusText}</div>
+          <div class="meta">Ostatnio widziane: ${fmtDate(x.lastSeen)}<br>Przypisane: ${fmtDate(x.claimedAt)}<br>Hardware: ${hwText} | FW: ${fwText}<br>WM Smart Climate: ${smartClimateLabel}</div>
+          <div class="row" style="margin-top:10px;">${smartClimateButton}</div>
+        `;
+        grid.appendChild(card);
+      });
+      grid.querySelectorAll("[data-smart-climate-device]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const did = String(btn.getAttribute("data-smart-climate-device") || "").trim();
+          const next = String(btn.getAttribute("data-smart-climate-next") || "").trim().toLowerCase() === "on";
+          if (!did) return;
+          const prompt = next
+            ? `Włączyć dostęp WM Smart Climate dla ${did}?`
+            : `Wyłączyć dostęp WM Smart Climate dla ${did}?`;
+          if (!confirm(prompt)) return;
+          await setSmartClimateAccess(did, next, btn);
+        });
+      });
+    }
+    function renderFirmwareList(items) {
+      firmwareList.innerHTML = "";
+      if (!items.length) {
+        firmwareList.innerHTML = `<div class="list-item"><div class="sub-line">Brak firmware.</div></div>`;
+        return;
+      }
+      items.forEach((f) => {
+        const hw = normalizeHardware(f.hardware);
+        const target = normalizeFirmwareTarget(f.target);
+        const signed = String(f.signature_alg || "").toLowerCase() === "ed25519" && String(f.signature || "").trim().length === 128;
+        const el = document.createElement("div");
+        el.className = "list-item firmware-item";
+        el.innerHTML = `
+          <button class="campaign-delete" data-delete-firmware="${f.id}" type="button" title="Usuń firmware" aria-label="Usuń firmware">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9z"/></svg>
+          </button>
+          <div class="title-line">${f.version}<span class="tag ${f.channel === "beta" ? "blue" : "green"}">${f.channel}</span><span class="tag blue">${firmwareTargetLabel(target)}</span><span class="tag blue">${hardwareLabel(hw)}</span><span class="tag ${signed ? "green" : "red"}">${signed ? "signed" : "unsigned"}</span></div>
+          <div class="sub-line">Rozmiar: ${(Number(f.size || 0) / 1024).toFixed(1)} KB | SHA256: ${String(f.sha256 || "").slice(0, 12)}...</div>
+          <div class="sub-line">Wgrano: ${fmtDate(f.uploadedAt)}</div>
+          <div class="sub-line">${f.notes || "-"}</div>
+        `;
+        firmwareList.appendChild(el);
+      });
+      firmwareList.querySelectorAll("[data-delete-firmware]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-delete-firmware");
+          if (!confirm("Usunąć to firmware z listy i plik z serwera?")) return;
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/firmwares/${encodeURIComponent(id)}`, {
+              method: "DELETE",
+              credentials: "same-origin",
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd usuwania firmware");
+            await loadOverview();
+            showToast("Firmware usunięte");
+          } catch (e) {
+            showToast(e.message || "Błąd usuwania firmware");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+    function renderCampaignList(items) {
+      campaignList.innerHTML = "";
+      if (!items.length) {
+        campaignList.innerHTML = `<div class="list-item"><div class="sub-line">Brak kampanii.</div></div>`;
+        return;
+      }
+      items.forEach((c) => {
+        const queued = (c.devices || []).filter((d) => d.status === "queued").length;
+        const sent = (c.devices || []).filter((d) => d.status === "sent").length;
+        const downloading = (c.devices || []).filter((d) => d.status === "downloading").length;
+        const flashing = (c.devices || []).filter((d) => d.status === "flashing").length;
+        const cancelled = (c.devices || []).filter((d) => d.status === "cancelled").length;
+        const failed = (c.devices || []).filter((d) => d.status === "failed" || d.status === "publish_failed").length;
+        const done = (c.devices || []).filter((d) => d.status === "done").length;
+        const tagClass = (c.status === "cancelled" || c.status === "failed" || c.status === "partial_failed") ? "red" : "blue";
+        const canCancel = c.status !== "cancelled" && (queued + sent + downloading + flashing) > 0;
+        const payloadTarget = normalizeFirmwareTarget(
+          c.firmwareTarget || appState.firmwares.find((f) => String(f?.id || "") === String(c.firmwareId || ""))?.target
+        );
+        const perDevice = (c.devices || []).map((d) => {
+          const pct = Number.isFinite(Number(d.progress)) ? ` ${Number(d.progress)}%` : "";
+          const note = d.note ? ` - ${d.note}` : "";
+          const hw = hardwareLabel(d.hardware);
+          return `<div class="sub-line">${d.deviceId} [${hw}]: ${d.status}${pct}${note}</div>`;
+        }).join("");
+        const el = document.createElement("div");
+        el.className = "list-item campaign-item";
+        el.innerHTML = `
+          <button class="campaign-delete" data-delete-campaign="${c.id}" type="button" title="Usuń kampanię" aria-label="Usuń kampanię">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9z"/></svg>
+          </button>
+          <div class="title-line">${c.firmwareVersion}<span class="tag ${tagClass}">${c.status}</span><span class="tag blue">${firmwareTargetLabel(payloadTarget)}</span><span class="tag blue">${hardwareLabel(c.hardware)}</span></div>
+          <div class="sub-line">Kampania: ${c.id}</div>
+          <div class="sub-line">Urządzenia: ${c.devices?.length || 0} | queued: ${queued} | sent: ${sent} | downloading: ${downloading} | flashing: ${flashing} | done: ${done} | failed: ${failed} | cancelled: ${cancelled}</div>
+          <div class="sub-line">Utworzono: ${fmtDate(c.createdAt)}</div>
+          ${perDevice}
+          ${canCancel ? `<div class="row" style="margin-top:8px;"><button class="btn btn-red" data-cancel="${c.id}" type="button">Anuluj kampanię</button></div>` : ``}
+        `;
+        campaignList.appendChild(el);
+      });
+      campaignList.querySelectorAll("[data-delete-campaign]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-delete-campaign");
+          if (!confirm("Usunąć tę kampanię OTA z listy?")) return;
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/ota/campaigns/${encodeURIComponent(id)}`, {
+              method: "DELETE",
+              credentials: "same-origin",
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd usuwania kampanii");
+            await loadOverview();
+            showToast("Kampania usunięta");
+          } catch (e) {
+            showToast(e.message || "Błąd usuwania kampanii");
+            btn.disabled = false;
+          }
+        });
+      });
+      campaignList.querySelectorAll("[data-cancel]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-cancel");
+          btn.disabled = true;
+          try {
+            const r = await fetch(`/api/admin/ota/campaigns/${encodeURIComponent(id)}/cancel`, {
+              method: "POST",
+              credentials: "same-origin",
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd anulowania");
+            await loadOverview();
+            showToast("Kampania anulowana");
+          } catch (e) {
+            showToast(e.message || "Błąd anulowania kampanii");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+    function renderCampaignForm(devices, firmwares) {
+      const previousFirmwareId = String(campaignFirmware.value || "");
+      const checkedDeviceIds = new Set(
+        Array.from(selectedDevices.querySelectorAll("input[type=checkbox]:checked"))
+          .map((x) => String(x.value || ""))
+          .filter(Boolean)
+      );
+      campaignFirmware.innerHTML = "";
+      firmwares.forEach((f) => {
+        const opt = document.createElement("option");
+        opt.value = f.id;
+        const hardware = normalizeHardware(f.hardware);
+        opt.dataset.hardware = hardware;
+        const payloadTarget = normalizeFirmwareTarget(f.target);
+        opt.dataset.target = payloadTarget;
+        opt.textContent = `${f.version} (${f.channel}, ${firmwareTargetLabel(payloadTarget)}, ${hardwareLabel(hardware)})`;
+        campaignFirmware.appendChild(opt);
+      });
+      if (campaignFirmware.options.length) {
+        const canRestoreFirmware = Array.from(campaignFirmware.options).some((opt) => opt.value === previousFirmwareId);
+        if (canRestoreFirmware) {
+          campaignFirmware.value = previousFirmwareId;
+        } else {
+          campaignFirmware.selectedIndex = 0;
+        }
+      }
+      selectedDevices.innerHTML = "";
+      devices.forEach((d) => {
+        const row = document.createElement("label");
+        row.className = "chip-item";
+        const hardware = normalizeHardware(d.hardware);
+        row.dataset.hardware = hardware;
+        const checked = checkedDeviceIds.has(String(d.deviceId || ""));
+        row.innerHTML = `<input type="checkbox" value="${d.deviceId}" ${d.online ? "" : "disabled"} ${checked ? "checked" : ""} data-hardware="${hardware}" data-base-disabled="${d.online ? "0" : "1"}"> <span>${d.deviceId} - ${d.ownerEmail} [${hardwareLabel(hardware)}] ${d.online ? "" : "(offline)"}</span>`;
+        selectedDevices.appendChild(row);
+      });
+      refreshCampaignDeviceFilter();
+    }
+    function refreshCampaignDeviceFilter() {
+      const fwOpt = campaignFirmware.options[campaignFirmware.selectedIndex];
+      const fwHardware = normalizeHardware(fwOpt?.dataset?.hardware || "");
+      selectedDevices.querySelectorAll(".chip-item").forEach((row) => {
+        const cb = row.querySelector("input[type=checkbox]");
+        if (!cb) return;
+        const devHardware = normalizeHardware(cb.dataset.hardware || row.dataset.hardware || "");
+        const baseDisabled = !cb.value || cb.dataset.baseDisabled === "1";
+        const unknownAllowed = !isHardwareReportRequiredNow();
+        const unknownMismatch = !devHardware && !unknownAllowed;
+        const mismatch = !fwHardware || unknownMismatch || (devHardware && devHardware !== fwHardware);
+        if (baseDisabled || mismatch) {
+          cb.checked = false;
+          cb.disabled = true;
+          row.style.opacity = mismatch ? "0.55" : "";
+        } else {
+          cb.disabled = false;
+          row.style.opacity = "";
+        }
+      });
+    }
+    function renderAll() {
+      updateStats(appState.devices);
+      renderDeviceCards(appState.devices);
+      renderFirmwareList(appState.firmwares);
+      renderCampaignList(appState.otaCampaigns);
+      renderCampaignForm(appState.devices, appState.firmwares);
+    }
+    async function checkSession() {
+      const r = await fetch("/api/session", { credentials: "same-origin" });
+      if (!r.ok) { await logoutCurrentUser(); return null; }
+      const d = await r.json();
+      if (!d.isAdmin) { location.href = "/devices"; return null; }
+      sessionInfo.textContent = "Zalogowany: " + d.email;
+      return d;
+    }
+    async function loadOverview() {
+      const r = await fetch("/api/admin/updates/overview", { credentials: "same-origin" });
+      if (r.status === 401) { location.href = "/"; return; }
+      if (r.status === 403) { location.href = "/devices"; return; }
+      if (!r.ok) throw new Error("Błąd API admin");
+      const d = await r.json();
+      appState = {
+        devices: Array.isArray(d.devices) ? d.devices : [],
+        firmwares: Array.isArray(d.firmwares) ? d.firmwares : [],
+        otaCampaigns: Array.isArray(d.otaCampaigns) ? d.otaCampaigns : [],
+      };
+      renderAll();
+    }
+
+    function renderUsers(users) {
+      const wrap = document.getElementById("usersGrid");
+      const empty = document.getElementById("usersEmpty");
+      const q = (document.getElementById("usersSearch").value || "").trim().toLowerCase();
+      const filter = document.getElementById("usersFilter").value;
+      const items = (users || []).filter((u) => {
+        const email = String(u.email || "").toLowerCase();
+        const dev = String(u.deviceId || "").toLowerCase();
+        const match = !q || email.includes(q) || dev.includes(q);
+        if (!match) return false;
+        if (filter === "online") return u.device?.online === true;
+        if (filter === "offline") return u.deviceId && u.device?.online !== true;
+        if (filter === "has-device") return !!u.deviceId;
+        if (filter === "no-device") return !u.deviceId;
+        return true;
+      });
+
+      wrap.innerHTML = "";
+      document.getElementById("usersCount").textContent = String(items.length);
+      if (!items.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      items.forEach((u) => {
+        const card = document.createElement("article");
+        card.className = "card " + (u.device?.state === "podlewa" ? "s-watering" : (u.device?.online ? "s-online" : (u.deviceId ? "s-offline" : "")));
+        const statusText = u.deviceId
+          ? (u.device?.state === "podlewa" ? "Online - podlewa" : (u.device?.online ? "Online - bezczynny" : "Offline"))
+          : "Brak urządzenia";
+
+        const lastLogin = fmtDate(u.lastLoginAt);
+        const claimed = u.deviceId ? fmtDate(u.device?.claimedAt) : "-";
+        const hardwareText = u.deviceId ? hardwareLabel(u.device?.hardware) : "-";
+        const firmwareText = u.deviceId ? (String(u.device?.firmwareVersion || "").trim() || "brak danych") : "-";
+
+        card.innerHTML = `
+          <div class="email">${u.email}</div>
+          <div class="id">${u.deviceId || "—"}</div>
+          <div class="status"><span class="dot"></span>${statusText}</div>
+          <div class="meta">Ostatnie logowanie: ${lastLogin}<br>Przypisane: ${claimed}<br>Urządzenie: ${hardwareText} | FW: ${firmwareText}</div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-gray" data-reset="${u.id}" type="button">Reset hasła</button>
+            <button class="btn btn-red" data-unclaim="${u.id}" type="button" ${u.deviceId ? "" : "disabled"}>Odłącz urządzenie</button>
+            <button class="btn btn-red" data-delete="${u.id}" type="button">Usuń użytkownika</button>
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+
+      wrap.querySelectorAll("[data-reset]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-reset");
+          btn.disabled = true;
+          try {
+            const r = await apiPost(`/api/admin/users/${encodeURIComponent(id)}/reset-password`, {});
+            const d = await readJsonOrText(r);
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd resetu hasła");
+            showToast(`Nowe hasło: ${d.password}`);
+          } catch (e) {
+            showToast(e.message || "Błąd resetu hasła");
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+      wrap.querySelectorAll("[data-unclaim]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-unclaim");
+          if (!confirm("Odłączyć urządzenie od tego użytkownika?")) return;
+          btn.disabled = true;
+          try {
+            const r = await apiPost(`/api/admin/users/${encodeURIComponent(id)}/unclaim`, {});
+            const d = await readJsonOrText(r);
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd odłączania");
+            showToast("Odłączono urządzenie");
+            await loadUsers();
+            await loadOverview();
+          } catch (e) {
+            showToast(e.message || "Błąd odłączania");
+            btn.disabled = false;
+          }
+        });
+      });
+
+      wrap.querySelectorAll("[data-delete]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-delete");
+          if (!confirm("Usunąć użytkownika? To odłączy jego urządzenie i usunie konto.")) return;
+          btn.disabled = true;
+          try {
+            const r = await apiPost(`/api/admin/users/${encodeURIComponent(id)}/delete`, {});
+            const d = await readJsonOrText(r);
+            if (!r.ok || !d.ok) throw new Error(d.error || "Błąd usuwania użytkownika");
+            showToast("Usunięto użytkownika");
+            await loadUsers();
+            await loadOverview();
+          } catch (e) {
+            showToast(e.message || "Błąd usuwania użytkownika");
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadUsers() {
+      const r = await fetch("/api/admin/users", { credentials: "same-origin" });
+      if (r.status === 401) { location.href = "/"; return; }
+      if (r.status === 403) { location.href = "/devices"; return; }
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || "Błąd API users");
+      userState = { users: Array.isArray(d.users) ? d.users : [] };
+      renderUsers(userState.users);
+    }
+
+    function attachLiveStream() {
+      try {
+        const es = new EventSource("/api/admin/updates/stream");
+        let pending = false;
+        let lastAt = 0;
+        const kick = () => {
+          const now = Date.now();
+          if (pending) return;
+          // Throttle refreshes if MQTT is noisy.
+          if (now - lastAt < 700) return;
+          pending = true;
+          lastAt = now;
+          loadOverview().catch(() => {}).finally(() => { pending = false; });
+        };
+        es.addEventListener("ota", kick);
+        es.addEventListener("hello", () => {});
+        es.onerror = () => {
+          // Browser will auto-reconnect; keep silent.
+        };
+      } catch {
+        // ignore
+      }
+    }
+    async function uploadFirmware() {
+      const version = document.getElementById("fwVersion").value.trim();
+      const channel = document.getElementById("fwChannel").value;
+      const hardware = normalizeHardware(fwHardware?.value || "");
+      const notes = document.getElementById("fwNotes").value.trim();
+      const file = document.getElementById("fwFile").files?.[0];
+      if (!version) return showToast("Podaj wersję firmware");
+      if (!hardware) return showToast("Wybierz hardware firmware");
+      if (!file) return showToast("Wybierz plik .bin");
+      if (uploadInFlight) return;
+
+      uploadInfo.textContent = "Wysyłanie...";
+      try {
+        // Avoid custom headers for Safari/Chrome: put metadata in query string.
+        const rawName = String(file.name || "firmware.bin");
+        const safeName = rawName.replace(/[^A-Za-z0-9._-]/g, "_") || "firmware.bin";
+        const inferredTarget = /(?:^|[._-])(littlefs|spiffs|filesystem|fs)(?:[._-]|$)/i.test(rawName) ? "fs" : "firmware";
+        const notesB64 = notes
+          ? btoa(unescape(encodeURIComponent(notes))) // utf-8 -> base64 ASCII
+          : "";
+
+        const uploadUrl = apiUrl(
+          `/api/admin/firmware/upload?version=${encodeURIComponent(version)}` +
+          `&channel=${encodeURIComponent(channel)}` +
+          `&hardware=${encodeURIComponent(hardware)}` +
+          `&target=${encodeURIComponent(inferredTarget)}` +
+          `&filename=${encodeURIComponent(safeName)}` +
+          `&notes_b64=${encodeURIComponent(notesB64)}`
+        );
+        uploadInFlight = true;
+        showUploadModal(safeName);
+
+        // Use XHR to get upload progress events (fetch doesn't expose them reliably).
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", uploadUrl, true);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+        xhr.upload.onprogress = (e) => {
+          if (e && e.lengthComputable) updateUploadModal(e.loaded, e.total);
+        };
+        xhr.onerror = () => {
+          uploadInfo.textContent = "";
+          uploadInFlight = false;
+          hideUploadModal();
+          showToast("Błąd uploadu (network)");
+        };
+        xhr.onload = async () => {
+          uploadInFlight = false;
+          try {
+            const status = xhr.status || 0;
+            const ct = (xhr.getResponseHeader("content-type") || "").toLowerCase();
+            let data = null;
+            if (ct.includes("application/json")) {
+              data = JSON.parse(xhr.responseText || "{}");
+            } else {
+              data = { ok: false, error: xhr.responseText || `HTTP ${status}` };
+            }
+            if (status === 413) {
+              uploadInfo.textContent = "";
+              hideUploadModal();
+              return showToast("Upload odrzucony (413). Na serwerze ustaw w Nginx: client_max_body_size 20m;");
+            }
+            if (status < 200 || status >= 300 || !data.ok) {
+              uploadInfo.textContent = "";
+              hideUploadModal();
+              return showToast(data.error || `Błąd uploadu (HTTP ${status})`);
+            }
+          } catch (e) {
+            uploadInfo.textContent = "";
+            hideUploadModal();
+            return showToast(e.message || "Błąd odpowiedzi uploadu");
+          }
+          updateUploadModal(file.size, file.size);
+          uploadInfo.textContent = "Gotowe";
+          document.getElementById("fwFile").value = "";
+          await loadOverview();
+          showToast("Firmware dodane");
+          setTimeout(() => hideUploadModal(), 700);
+        };
+
+        // Send file as ArrayBuffer to avoid multipart overhead.
+        const buf = await file.arrayBuffer();
+        xhr.send(buf);
+      } catch (e) {
+        uploadInfo.textContent = "";
+        uploadInFlight = false;
+        return showToast(e.message || "Błąd uploadu");
+      }
+    }
+    async function createCampaign() {
+      if (!appState.firmwares.length) return showToast("Najpierw dodaj firmware");
+      const firmwareId = campaignFirmware.value;
+      const target = campaignTarget.value;
+      const selectedFirmware = appState.firmwares.find((f) => String(f?.id || "") === String(firmwareId || ""));
+      const payloadLabel = firmwareTargetLabel(selectedFirmware?.target);
+      const deviceIds = Array.from(selectedDevices.querySelectorAll("input[type=checkbox]:checked")).map((x) => x.value);
+      if (target === "selected" && deviceIds.length === 0) {
+        return showToast("Brak zgodnych urządzeń dla wybranego firmware/hardware");
+      }
+      campaignInfo.textContent = `Tworzenie kampanii ${payloadLabel}...`;
+      const r = await fetch("/api/admin/ota/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firmwareId, target, deviceIds }),
+        credentials: "same-origin",
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) {
+        campaignInfo.textContent = "";
+        return showToast(d.error || "Błąd tworzenia kampanii");
+      }
+      campaignInfo.textContent = `Utworzono kampanię ${payloadLabel}`;
+      await loadOverview();
+      showToast(`Kampania OTA ${payloadLabel} utworzona`);
+    }
+    async function init() {
+      try {
+        const s = await checkSession();
+        if (!s) return;
+        await loadOverview();
+        await loadUsers();
+        try { await loadWateringStats({ silent: true }); } catch {}
+        attachLiveStream();
+        setInterval(async () => {
+          try { await loadOverview(); } catch {}
+          try { await loadUsers(); } catch {}
+          if (activeTab === "stats" || statsChartModal.classList.contains("show")) {
+            try { await loadWateringStats({ silent: true }); } catch {}
+          }
+        }, 10000);
+      } catch {
+        sessionInfo.textContent = "Błąd połączenia z panelem administratora";
+      }
+    }
+
+    async function handleManualRefresh() {
+      const btn = document.getElementById("refreshBtn");
+      const oldLabel = btn ? btn.textContent : "Odśwież";
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Odświeżanie...";
+      }
+      try {
+        await loadOverview();
+        await loadUsers();
+        if (activeTab === "stats" || statsLoadedOnce || statsChartModal.classList.contains("show")) {
+          await loadWateringStats({ silent: true });
+        }
+        if (statsChartModal.classList.contains("show") && statsChartState.deviceId) {
+          const grouping = String(statsChartState.grouping || statsChartGroup.value || "daily");
+          await loadStatsChartData(grouping);
+        }
+        showToast("Odświeżono");
+      } catch (e) {
+        showToast(e.message || "Błąd odświeżania");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = oldLabel || "Odśwież";
+        }
+      }
+    }
+
+    document.getElementById("logoutBtn").onclick = logoutCurrentUser;
+    document.getElementById("refreshBtn").onclick = handleManualRefresh;
+    document.getElementById("uploadBtn").onclick = uploadFirmware;
+    document.getElementById("createCampaignBtn").onclick = createCampaign;
+    uploadHideBtn.onclick = hideUploadModal;
+    campaignTarget.addEventListener("change", () => {
+      selectedDevicesWrap.style.display = campaignTarget.value === "selected" ? "block" : "none";
+    });
+    campaignFirmware.addEventListener("change", refreshCampaignDeviceFilter);
+    document.getElementById("fwFile").addEventListener("change", (e) => {
+      const file = e.target?.files?.[0];
+      const rawName = String(file?.name || "").toLowerCase();
+      if (!rawName) return;
+      if (/(^|[._-])sono?ff?[\s._-]*4ch([._-]|$)/.test(rawName)) {
+        fwHardware.value = "sonoff4ch";
+      } else if (/(^|[._-])(bw|blitzwolf)[\s._-]*shp[\s._-]*6([._-]|$)/.test(rawName)) {
+        fwHardware.value = "bwshp6";
+      } else if (/(^|[._-])esp32[\s._-]*c6([._-]|$)/.test(rawName) || /(^|[._-])c6([._-]|$)/.test(rawName)) {
+        fwHardware.value = "esp32c6";
+      } else if (/(^|[._-])esp32([._-]|$)/.test(rawName)) {
+        fwHardware.value = "esp32";
+      }
+    });
+    document.querySelectorAll(".nav-item").forEach((btn) => {
+      btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab")));
+    });
+
+    document.getElementById("usersSearch").addEventListener("input", () => renderUsers(userState.users));
+    document.getElementById("usersFilter").addEventListener("change", () => renderUsers(userState.users));
+    statsRefreshBtn.addEventListener("click", () => {
+      loadWateringStats({ silent: false }).catch((e) => showToast(e.message || "Błąd odczytu statystyk"));
+    });
+    statsMonthInput.addEventListener("change", () => {
+      loadWateringStats({ silent: false }).catch((e) => showToast(e.message || "Błąd odczytu statystyk"));
+    });
+    statsDeviceFilter.addEventListener("change", () => {
+      loadWateringStats({ silent: false }).catch((e) => showToast(e.message || "Błąd odczytu statystyk"));
+    });
+    statsExportBtn.addEventListener("click", exportSummaryCsv);
+    statsChartCloseBtn.addEventListener("click", closeStatsChart);
+    statsChartExportBtn.addEventListener("click", exportChartCsv);
+    statsChartGroup.addEventListener("change", () => {
+      const grouping = String(statsChartGroup.value || "daily");
+      statsChartState.grouping = grouping;
+      if (!statsChartModal.classList.contains("show") || !statsChartState.deviceId) return;
+      statsModalSub.textContent = "Ładowanie danych...";
+      loadStatsChartData(grouping).catch((e) => {
+        statsModalSub.textContent = "Nie udało się wczytać danych wykresu.";
+        statsChartBars.innerHTML = `<div class="muted" style="padding:12px 6px;">${escapeHtml(e.message || "Błąd odczytu danych")}</div>`;
+      });
+    });
+    statsChartModal.addEventListener("click", (event) => {
+      if (event.target === statsChartModal) closeStatsChart();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && statsChartModal.classList.contains("show")) closeStatsChart();
+    });
+
+    statsMonthInput.value = defaultMonthValue();
+    bindIdleSessionHandlers();
+    primeIdleSession();
+    init();
+  </script>
+</body>
+</html>

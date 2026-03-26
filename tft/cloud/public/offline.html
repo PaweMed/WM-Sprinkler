@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <title>WM Sprinkler</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; min-height: 100vh; background: linear-gradient(135deg,#2563eb,#10b981); display: grid; place-items: center; color: #fff; }
+    .card { width: min(92vw, 460px); background: rgba(255,255,255,.12); backdrop-filter: blur(8px); border-radius: 14px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+    .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .head-actions { display: inline-flex; align-items: center; gap: 8px; }
+    #offlineLangTrigger { border: 1px solid rgba(255,255,255,.6); border-radius: 999px; width: 34px; height: 34px; padding: 0; background: rgba(255,255,255,.2); color: #fff; font-size: 18px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    #offlineLangTrigger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    p { margin: 0 0 10px; line-height: 1.4; }
+    .muted { opacity: .9; font-size: 14px; }
+    .status { margin-top: 10px; font-size: 15px; }
+    code { background: rgba(0,0,0,.2); padding: 2px 6px; border-radius: 6px; }
+    button { border: 0; border-radius: 8px; padding: 8px 10px; background: #dc2626; color: #fff; cursor: pointer; }
+    #offline-lang-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 2000; }
+    #offline-lang-modal.show { display: flex; }
+    .offline-lang-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+    .offline-lang-card { position: relative; width: min(360px, calc(100vw - 28px)); background: #fff; color: #111827; border-radius: 12px; box-shadow: 0 16px 44px rgba(15, 23, 42, .3); padding: 14px; }
+    .offline-lang-title { margin: 0 0 10px; font-size: 14px; font-weight: 700; }
+    .offline-lang-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .offline-lang-option { border: 1px solid #dbe3ec; border-radius: 10px; background: #f8fafc; color: #111827; padding: 8px 6px; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+    .offline-lang-option .flag { font-size: 20px; }
+    .offline-lang-option .label { font-size: 11px; font-weight: 600; color: #1f2937; }
+    .offline-lang-option.active { border-color: #2563eb; background: #dbeafe; }
+    @media (max-width: 480px) {
+      #offlineLangTrigger { width: 32px; height: 32px; font-size: 17px; }
+      .offline-lang-card { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <h1 id="offlineHeading">Urządzenie offline</h1>
+      <div class="head-actions">
+        <button id="offlineLangTrigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Zmień język">
+          <span id="offlineLangFlag" aria-hidden="true">🇵🇱</span>
+        </button>
+        <button id="logoutBtn" type="button">Wyloguj</button>
+      </div>
+    </div>
+    <p id="offlineIntro">Nie mogę połączyć się z Twoim ESP32 przez internet.</p>
+    <p class="muted" id="offlineAutoOpen">Panel otworzy się automatycznie, gdy urządzenie wróci online.</p>
+    <div class="status" id="status">Sprawdzam status...</div>
+  </div>
+  <div id="offline-lang-modal" aria-hidden="true">
+    <div class="offline-lang-backdrop" data-offline-lang-close="1"></div>
+    <div class="offline-lang-card" role="dialog" aria-modal="true" aria-labelledby="offlineLangTitle">
+      <p id="offlineLangTitle" class="offline-lang-title">Wybierz język</p>
+      <div id="offlineLangOptions" class="offline-lang-options"></div>
+    </div>
+  </div>
+  <script>
+    const supportedLanguages = ["pl", "en", "de", "es"];
+    const fallbackLanguage = "en";
+    const languageCookieKey = "wms_lang";
+    const languageStorageKeys = ["wm-landing-language", "wm-language", "wms_lang"];
+    const localeByLanguage = {
+      pl: "pl-PL",
+      en: "en-US",
+      de: "de-DE",
+      es: "es-ES"
+    };
+    const languageMeta = {
+      pl: { flag: "🇵🇱", label: "Polski" },
+      en: { flag: "🇬🇧", label: "English" },
+      de: { flag: "🇩🇪", label: "Deutsch" },
+      es: { flag: "🇪🇸", label: "Español" }
+    };
+    const offlineI18n = {
+      pl: {
+        title: "WM Sprinkler | Urządzenie offline",
+        heading: "Urządzenie offline",
+        logout: "Wyloguj",
+        intro: "Nie mogę połączyć się z Twoim ESP32 przez internet.",
+        autoOpen: "Panel otworzy się automatycznie, gdy urządzenie wróci online.",
+        checking: "Sprawdzam status...",
+        serverError: "Błąd połączenia z serwerem.",
+        noServerResponse: "Brak odpowiedzi z serwera. Ponawiam...",
+        noDevice: "brak",
+        noLastSeen: "brak",
+        statusOffline: "Urządzenie {device} jest offline. Ostatnio widziane: {lastSeen}.",
+        languagePickerTitle: "Wybierz język",
+        languageButtonAria: "Zmień język"
+      },
+      en: {
+        title: "WM Sprinkler | Device offline",
+        heading: "Device offline",
+        logout: "Sign out",
+        intro: "I cannot connect to your ESP32 over the internet.",
+        autoOpen: "The panel will open automatically when the device is back online.",
+        checking: "Checking status...",
+        serverError: "Server connection error.",
+        noServerResponse: "No response from server. Retrying...",
+        noDevice: "none",
+        noLastSeen: "none",
+        statusOffline: "Device {device} is offline. Last seen: {lastSeen}.",
+        languagePickerTitle: "Choose language",
+        languageButtonAria: "Change language"
+      },
+      de: {
+        title: "WM Sprinkler | Gerät offline",
+        heading: "Gerät offline",
+        logout: "Abmelden",
+        intro: "Ich kann keine Verbindung zu deinem ESP32 über das Internet herstellen.",
+        autoOpen: "Das Panel öffnet sich automatisch, sobald das Gerät wieder online ist.",
+        checking: "Status wird geprüft...",
+        serverError: "Verbindungsfehler zum Server.",
+        noServerResponse: "Keine Antwort vom Server. Neuer Versuch...",
+        noDevice: "keins",
+        noLastSeen: "keine Angabe",
+        statusOffline: "Gerät {device} ist offline. Zuletzt gesehen: {lastSeen}.",
+        languagePickerTitle: "Sprache wählen",
+        languageButtonAria: "Sprache ändern"
+      },
+      es: {
+        title: "WM Sprinkler | Dispositivo offline",
+        heading: "Dispositivo offline",
+        logout: "Cerrar sesión",
+        intro: "No puedo conectarme a tu ESP32 por internet.",
+        autoOpen: "El panel se abrirá automáticamente cuando el dispositivo vuelva a estar online.",
+        checking: "Comprobando estado...",
+        serverError: "Error de conexión con el servidor.",
+        noServerResponse: "Sin respuesta del servidor. Reintentando...",
+        noDevice: "sin dato",
+        noLastSeen: "sin dato",
+        statusOffline: "El dispositivo {device} está offline. Última conexión: {lastSeen}.",
+        languagePickerTitle: "Elegir idioma",
+        languageButtonAria: "Cambiar idioma"
+      }
+    };
+    const headingEl = document.getElementById("offlineHeading");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const introEl = document.getElementById("offlineIntro");
+    const autoOpenEl = document.getElementById("offlineAutoOpen");
+    const statusEl = document.getElementById("status");
+    const langTrigger = document.getElementById("offlineLangTrigger");
+    const langFlag = document.getElementById("offlineLangFlag");
+    const langModal = document.getElementById("offline-lang-modal");
+    const langTitle = document.getElementById("offlineLangTitle");
+    const langOptions = document.getElementById("offlineLangOptions");
+    let activeLanguage = fallbackLanguage;
+    let tr = offlineI18n[fallbackLanguage];
+    let latestStatusPayload = null;
+    let latestStatusState = "checking";
+
+    function readCookie(name) {
+      const encodedName = `${encodeURIComponent(name)}=`;
+      const source = String(document.cookie || "");
+      const row = source.split(";").map((x) => x.trim()).find((x) => x.startsWith(encodedName));
+      if (!row) return "";
+      try {
+        return decodeURIComponent(row.slice(encodedName.length));
+      } catch {
+        return "";
+      }
+    }
+
+    function writeLangCookie(lang) {
+      const maxAgeSeconds = 60 * 60 * 24 * 365 * 2;
+      const securePart = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `${encodeURIComponent(languageCookieKey)}=${encodeURIComponent(lang)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${securePart}`;
+    }
+
+    function normalizeLang(value) {
+      const candidate = String(value || "").trim().toLowerCase().replace("_", "-");
+      const base = candidate.split("-")[0];
+      return supportedLanguages.includes(base) ? base : "";
+    }
+
+    function languageFromNavigator() {
+      const raw = Array.isArray(navigator.languages) && navigator.languages.length ? navigator.languages : [navigator.language];
+      for (const item of raw) {
+        const normalized = normalizeLang(item);
+        if (normalized) return normalized;
+      }
+      return "";
+    }
+
+    function languageFromStorage() {
+      for (const key of languageStorageKeys) {
+        try {
+          const value = normalizeLang(localStorage.getItem(key));
+          if (value) return value;
+        } catch {}
+      }
+      return "";
+    }
+
+    function persistLanguage(lang) {
+      writeLangCookie(lang);
+      for (const key of languageStorageKeys) {
+        try {
+          localStorage.setItem(key, lang);
+        } catch {}
+      }
+    }
+
+    function replaceTokens(template, tokens) {
+      return String(template || "").replace(/\{(\w+)\}/g, (_m, key) => String(tokens[key] ?? ""));
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderStatus() {
+      if (latestStatusState === "serverError") {
+        statusEl.textContent = tr.serverError;
+        return;
+      }
+      if (latestStatusState === "noServerResponse") {
+        statusEl.textContent = tr.noServerResponse;
+        return;
+      }
+      if (!latestStatusPayload) {
+        statusEl.textContent = tr.checking;
+        return;
+      }
+      const deviceId = latestStatusPayload.device_id || tr.noDevice;
+      const locale = localeByLanguage[activeLanguage] || localeByLanguage[fallbackLanguage];
+      const lastSeen = latestStatusPayload.lastSeen ? new Date(latestStatusPayload.lastSeen).toLocaleString(locale) : tr.noLastSeen;
+      statusEl.innerHTML = replaceTokens(tr.statusOffline, {
+        device: `<code>${escapeHtml(deviceId)}</code>`,
+        lastSeen: escapeHtml(lastSeen)
+      });
+    }
+
+    function closeLanguageModal() {
+      langModal.classList.remove("show");
+      langModal.setAttribute("aria-hidden", "true");
+      langTrigger.setAttribute("aria-expanded", "false");
+    }
+
+    function renderLanguageOptions() {
+      langOptions.innerHTML = "";
+      supportedLanguages.forEach((langCode) => {
+        const meta = languageMeta[langCode] || { flag: "🌐", label: langCode.toUpperCase() };
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "offline-lang-option";
+        if (langCode === activeLanguage) option.classList.add("active");
+        option.innerHTML = `<span class="flag" aria-hidden="true">${meta.flag}</span><span class="label">${meta.label}</span>`;
+        option.onclick = () => applyLanguage(langCode, { persist: true, closeModal: true });
+        langOptions.appendChild(option);
+      });
+    }
+
+    function applyLanguage(lang, { persist = true, closeModal = false } = {}) {
+      activeLanguage = normalizeLang(lang) || fallbackLanguage;
+      tr = offlineI18n[activeLanguage] || offlineI18n[fallbackLanguage];
+      if (persist) persistLanguage(activeLanguage);
+      document.documentElement.lang = activeLanguage;
+      document.title = tr.title;
+      headingEl.textContent = tr.heading;
+      logoutBtn.textContent = tr.logout;
+      introEl.textContent = tr.intro;
+      autoOpenEl.textContent = tr.autoOpen;
+      langTitle.textContent = tr.languagePickerTitle;
+      const meta = languageMeta[activeLanguage] || languageMeta.en;
+      langFlag.textContent = meta.flag;
+      langTrigger.setAttribute("title", `${tr.languageButtonAria}: ${meta.label}`);
+      langTrigger.setAttribute("aria-label", `${tr.languageButtonAria}: ${meta.label}`);
+      renderLanguageOptions();
+      renderStatus();
+      if (closeModal) closeLanguageModal();
+    }
+
+    const initialLanguage = normalizeLang(readCookie(languageCookieKey))
+      || languageFromStorage()
+      || languageFromNavigator()
+      || fallbackLanguage;
+    applyLanguage(initialLanguage, { persist: true, closeModal: false });
+    const DEFAULT_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+    let idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS;
+    let idleDeadline = Date.now() + idleTimeoutMs;
+    let idleStopped = false;
+    let lastActivityEventTs = 0;
+    let lastTouchTs = 0;
+    let touchInFlight = false;
+
+    function resetIdleDeadline() {
+      idleDeadline = Date.now() + idleTimeoutMs;
+    }
+
+    async function logout() {
+      if (idleStopped) return;
+      idleStopped = true;
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+      } catch {}
+      location.href = "/";
+    }
+
+    async function touchSession(force = false) {
+      if (touchInFlight) return;
+      const now = Date.now();
+      if (!force && now - lastTouchTs < 60 * 1000) return;
+      touchInFlight = true;
+      lastTouchTs = now;
+      try {
+        const r = await fetch("/api/session/touch", { method: "POST", credentials: "same-origin" });
+        if (r.status === 401) { await logout(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+          resetIdleDeadline();
+        }
+      } catch {
+        // brak zmian; timeout wykryje bezczynność
+      } finally {
+        touchInFlight = false;
+      }
+    }
+
+    async function primeIdleSession() {
+      try {
+        const r = await fetch("/api/session", { credentials: "same-origin" });
+        if (r.status === 401) { await logout(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+        }
+      } catch {}
+      resetIdleDeadline();
+      touchSession(true);
+    }
+
+    function bindIdleSessionHandlers() {
+      const onActivity = () => {
+        const now = Date.now();
+        if (now - lastActivityEventTs < 1000) return;
+        lastActivityEventTs = now;
+        resetIdleDeadline();
+        touchSession(false);
+      };
+      ["pointerdown", "keydown", "touchstart", "mousedown", "wheel", "scroll"].forEach((evt) => {
+        window.addEventListener(evt, onActivity, { passive: true });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) onActivity();
+      });
+      setInterval(() => {
+        if (Date.now() >= idleDeadline) logout();
+      }, 1000);
+    }
+
+    async function check() {
+      try {
+        const r = await fetch("/api/selected-device-status");
+        if (!r.ok) {
+          if (r.status === 401) { location.href = "/"; return; }
+          latestStatusPayload = null;
+          latestStatusState = "serverError";
+          renderStatus();
+          return;
+        }
+        const d = await r.json();
+        if (d.online) {
+          location.href = "/app";
+          return;
+        }
+        latestStatusPayload = d;
+        latestStatusState = "offline";
+        renderStatus();
+      } catch {
+        latestStatusPayload = null;
+        latestStatusState = "noServerResponse";
+        renderStatus();
+      }
+    }
+
+    langTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      renderLanguageOptions();
+      langModal.classList.add("show");
+      langModal.setAttribute("aria-hidden", "false");
+      langTrigger.setAttribute("aria-expanded", "true");
+    });
+    langModal.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-offline-lang-close='1']")) closeLanguageModal();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeLanguageModal();
+    });
+
+    logoutBtn.onclick = logout;
+    bindIdleSessionHandlers();
+    primeIdleSession();
+    check();
+    setInterval(check, 3000);
+  </script>
+</body>
+</html>

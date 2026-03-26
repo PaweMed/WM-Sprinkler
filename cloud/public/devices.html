@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <title>WM Sprinkler</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg,#3b82f6,#34d399);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+    .device-box {
+      position: relative;
+      width: min(94vw, 520px);
+    }
+    .device-logo {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 18px);
+      transform: translateX(-50%);
+      width: clamp(140px, 30vw, 234px);
+      height: auto;
+      opacity: .95;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,.2));
+    }
+    .wrap {
+      width: 100%;
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,.24);
+    }
+    .head {
+      position: relative;
+      min-height: 40px;
+      margin-bottom: 4px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #111;
+      text-align: center;
+      line-height: 40px;
+      padding: 0 88px;
+    }
+    p { color: #4b5563; margin: 0 0 16px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 12px; }
+    input, button, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    button { background: #2563eb; color: #fff; border: 0; cursor: pointer; }
+    .secondary { background: #4b5563; }
+    .open-primary {
+      display: block;
+      width: min(320px, 100%);
+      margin: 14px auto 0;
+      background: #16a34a;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 12px 16px;
+      box-shadow: 0 6px 14px rgba(22, 163, 74, .28);
+    }
+    .open-primary:hover { background: #15803d; }
+    .warn { background: #dc2626; }
+    .danger { background: #b91c1c; }
+    .ok { color: #059669; margin-top: 6px; min-height: 18px; }
+    .err { color: #dc2626; margin-top: 6px; min-height: 18px; }
+    .hidden { display: none; }
+    .device-info {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f9fafb;
+      color: #111827;
+      font-size: 14px;
+      border: 1px solid #e5e7eb;
+    }
+    #unclaimBtn {
+      margin-top: 10px;
+      margin-left: auto;
+      display: block;
+      width: auto;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    #logoutBtn {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+      }
+      .device-box { width: min(96vw, 520px); }
+      .device-logo {
+        width: clamp(128px, 42vw, 176px);
+        bottom: calc(100% + 10px);
+      }
+      .wrap {
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .head { min-height: 36px; }
+      h1 {
+        font-size: 20px;
+        line-height: 36px;
+        padding: 0 76px;
+      }
+      #logoutBtn {
+        top: -1px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      p {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      .row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      input, button, select {
+        width: 100%;
+        padding: 11px 10px;
+      }
+      #openBtnSingle { width: 100%; }
+      #unclaimBtn {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="device-box">
+    <img class="device-logo" src="/assets/logo-optimized-BnrUG8xa.png" alt="WeatherMap Sprinkler logo" />
+    <div class="wrap">
+      <div class="head">
+        <h1 id="pageTitle">Urządzenia</h1>
+        <button id="logoutBtn" class="warn" type="button">Wyloguj</button>
+      </div>
+      <p id="assignHint">Przypisz urządzenie do konta podając jego <code>device_id</code>.</p>
+      <div id="claimRow" class="row">
+        <input id="deviceId" placeholder="device_id, np. WMS_12345" />
+        <button id="claimBtn">Przypisz</button>
+      </div>
+      <div id="multiRow" class="row hidden" style="grid-template-columns:1fr auto auto;">
+        <select id="devices"></select>
+        <button id="selectBtn" class="secondary">Wybierz</button>
+        <button id="openBtn">Otwórz panel</button>
+      </div>
+      <button id="openBtnSingle" class="open-primary hidden" type="button">Otwórz panel</button>
+      <div id="deviceInfo" class="device-info hidden"></div>
+      <button id="unclaimBtn" class="danger hidden" type="button">Odłącz urządzenie</button>
+      <div id="msg"></div>
+    </div>
+  </div>
+  <script>
+    const supportedLanguages = ["pl", "en", "de", "es"];
+    const fallbackLanguage = "en";
+    const languageCookieKey = "wms_lang";
+    const languageStorageKeys = ["wm-landing-language", "wm-language", "wms_lang"];
+    const sampleDeviceCode = "WMS_12345";
+    const devicesI18n = {
+      pl: {
+        title: "WM Sprinkler | Urządzenia",
+        logoAlt: "Logo WeatherMap Sprinkler",
+        pageTitle: "Urządzenia",
+        logout: "Wyloguj",
+        assignHint: "Przypisz urządzenie do konta podając jego device_id, np. {code}.",
+        deviceIdPlaceholder: "device_id, np. {code}",
+        claimBtn: "Przypisz",
+        selectBtn: "Wybierz",
+        openBtn: "Otwórz panel",
+        unclaimBtn: "Odłącz urządzenie",
+        assignedDevice: "Przypisane urządzenie: {device}",
+        claimError: "Błąd przypisania",
+        claimSuccess: "Urządzenie przypisane.",
+        selectError: "Błąd wyboru",
+        selectSuccess: "Wybrano urządzenie.",
+        noAssignedDevice: "Brak przypisanego urządzenia",
+        unclaimConfirm: "Odłączyć urządzenie {device} od konta?",
+        unclaimError: "Błąd odłączania urządzenia",
+        unclaimSuccess: "Urządzenie odłączone."
+      },
+      en: {
+        title: "WM Sprinkler | Devices",
+        logoAlt: "WeatherMap Sprinkler logo",
+        pageTitle: "Devices",
+        logout: "Sign out",
+        assignHint: "Assign a device to your account using its device_id, e.g. {code}.",
+        deviceIdPlaceholder: "device_id, e.g. {code}",
+        claimBtn: "Assign",
+        selectBtn: "Select",
+        openBtn: "Open panel",
+        unclaimBtn: "Disconnect device",
+        assignedDevice: "Assigned device: {device}",
+        claimError: "Assignment error",
+        claimSuccess: "Device assigned.",
+        selectError: "Selection error",
+        selectSuccess: "Device selected.",
+        noAssignedDevice: "No assigned device",
+        unclaimConfirm: "Disconnect device {device} from your account?",
+        unclaimError: "Disconnect error",
+        unclaimSuccess: "Device disconnected."
+      },
+      de: {
+        title: "WM Sprinkler | Geräte",
+        logoAlt: "WeatherMap Sprinkler-Logo",
+        pageTitle: "Geräte",
+        logout: "Abmelden",
+        assignHint: "Ordne ein Gerät deinem Konto mit seiner device_id zu, z. B. {code}.",
+        deviceIdPlaceholder: "device_id, z. B. {code}",
+        claimBtn: "Zuweisen",
+        selectBtn: "Wählen",
+        openBtn: "Panel öffnen",
+        unclaimBtn: "Gerät trennen",
+        assignedDevice: "Zugewiesenes Gerät: {device}",
+        claimError: "Fehler beim Zuweisen",
+        claimSuccess: "Gerät zugewiesen.",
+        selectError: "Auswahlfehler",
+        selectSuccess: "Gerät ausgewählt.",
+        noAssignedDevice: "Kein Gerät zugewiesen",
+        unclaimConfirm: "Gerät {device} vom Konto trennen?",
+        unclaimError: "Fehler beim Trennen",
+        unclaimSuccess: "Gerät wurde getrennt."
+      },
+      es: {
+        title: "WM Sprinkler | Dispositivos",
+        logoAlt: "Logotipo de WeatherMap Sprinkler",
+        pageTitle: "Dispositivos",
+        logout: "Cerrar sesión",
+        assignHint: "Asigna un dispositivo a tu cuenta usando su device_id, p. ej. {code}.",
+        deviceIdPlaceholder: "device_id, p. ej. {code}",
+        claimBtn: "Asignar",
+        selectBtn: "Seleccionar",
+        openBtn: "Abrir panel",
+        unclaimBtn: "Desconectar dispositivo",
+        assignedDevice: "Dispositivo asignado: {device}",
+        claimError: "Error al asignar",
+        claimSuccess: "Dispositivo asignado.",
+        selectError: "Error de selección",
+        selectSuccess: "Dispositivo seleccionado.",
+        noAssignedDevice: "No hay dispositivo asignado",
+        unclaimConfirm: "¿Desconectar el dispositivo {device} de tu cuenta?",
+        unclaimError: "Error al desconectar",
+        unclaimSuccess: "Dispositivo desconectado."
+      }
+    };
+
+    function readCookie(name) {
+      const encodedName = `${encodeURIComponent(name)}=`;
+      const source = String(document.cookie || "");
+      const row = source.split(";").map((x) => x.trim()).find((x) => x.startsWith(encodedName));
+      if (!row) return "";
+      try {
+        return decodeURIComponent(row.slice(encodedName.length));
+      } catch {
+        return "";
+      }
+    }
+
+    function writeLangCookie(lang) {
+      const maxAgeSeconds = 60 * 60 * 24 * 365 * 2;
+      const securePart = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `${encodeURIComponent(languageCookieKey)}=${encodeURIComponent(lang)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${securePart}`;
+    }
+
+    function normalizeLang(value) {
+      const candidate = String(value || "").trim().toLowerCase();
+      return supportedLanguages.includes(candidate) ? candidate : "";
+    }
+
+    function languageFromStorage() {
+      for (const key of languageStorageKeys) {
+        try {
+          const value = normalizeLang(localStorage.getItem(key));
+          if (value) return value;
+        } catch {}
+      }
+      return "";
+    }
+
+    function languageFromNavigator() {
+      const raw = Array.isArray(navigator.languages) && navigator.languages.length ? navigator.languages : [navigator.language];
+      for (const item of raw) {
+        const base = String(item || "").toLowerCase().split("-")[0];
+        const normalized = normalizeLang(base);
+        if (normalized) return normalized;
+      }
+      return "";
+    }
+
+    function replaceTokens(template, tokens) {
+      return String(template || "").replace(/\{(\w+)\}/g, (_m, key) => String(tokens[key] ?? ""));
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    const activeLanguage = normalizeLang(readCookie(languageCookieKey))
+      || languageFromStorage()
+      || languageFromNavigator()
+      || fallbackLanguage;
+    const tr = devicesI18n[activeLanguage] || devicesI18n[fallbackLanguage];
+    writeLangCookie(activeLanguage);
+    document.documentElement.lang = activeLanguage;
+    document.title = tr.title;
+    document.querySelectorAll(".device-logo").forEach((img) => { img.alt = tr.logoAlt; });
+
+    const msg = document.getElementById("msg");
+    const pageTitleEl = document.getElementById("pageTitle");
+    const logoutBtnEl = document.getElementById("logoutBtn");
+    const assignHintEl = document.getElementById("assignHint");
+    const deviceIdEl = document.getElementById("deviceId");
+    const claimBtnEl = document.getElementById("claimBtn");
+    const selectBtnEl = document.getElementById("selectBtn");
+    const openBtnEl = document.getElementById("openBtn");
+    const devicesEl = document.getElementById("devices");
+    const claimRowEl = document.getElementById("claimRow");
+    const multiRowEl = document.getElementById("multiRow");
+    const openBtnSingleEl = document.getElementById("openBtnSingle");
+    const deviceInfoEl = document.getElementById("deviceInfo");
+    const unclaimBtnEl = document.getElementById("unclaimBtn");
+    const showMulti = new URLSearchParams(location.search).get("multi") === "1";
+
+    pageTitleEl.textContent = tr.pageTitle;
+    logoutBtnEl.textContent = tr.logout;
+    assignHintEl.innerHTML = replaceTokens(tr.assignHint, { code: `<code>${sampleDeviceCode}</code>` });
+    deviceIdEl.placeholder = replaceTokens(tr.deviceIdPlaceholder, { code: sampleDeviceCode });
+    claimBtnEl.textContent = tr.claimBtn;
+    selectBtnEl.textContent = tr.selectBtn;
+    openBtnEl.textContent = tr.openBtn;
+    openBtnSingleEl.textContent = tr.openBtn;
+    unclaimBtnEl.textContent = tr.unclaimBtn;
+
+    let selectedDeviceId = null;
+    const DEFAULT_IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+    let idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS;
+    let idleDeadline = Date.now() + idleTimeoutMs;
+    let idleStopped = false;
+    let lastActivityEventTs = 0;
+    let lastTouchTs = 0;
+    let touchInFlight = false;
+
+    function setMsg(text, ok = false) {
+      msg.className = ok ? "ok" : "err";
+      msg.textContent = text;
+    }
+
+    function assignedDeviceHtml(deviceId) {
+      return replaceTokens(tr.assignedDevice, {
+        device: `<code>${escapeHtml(deviceId)}</code>`
+      });
+    }
+
+    function resetIdleDeadline() {
+      idleDeadline = Date.now() + idleTimeoutMs;
+    }
+
+    async function logout() {
+      if (idleStopped) return;
+      idleStopped = true;
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+      } catch {}
+      location.href = "/";
+    }
+
+    async function touchSession(force = false) {
+      if (touchInFlight) return;
+      const now = Date.now();
+      if (!force && now - lastTouchTs < 60 * 1000) return;
+      touchInFlight = true;
+      lastTouchTs = now;
+      try {
+        const r = await fetch("/api/session/touch", { method: "POST", credentials: "same-origin" });
+        if (r.status === 401) { await logout(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+          resetIdleDeadline();
+        }
+      } catch {
+        // no-op; idle timer handles expiration
+      } finally {
+        touchInFlight = false;
+      }
+    }
+
+    async function primeIdleSession() {
+      try {
+        const r = await fetch("/api/session", { credentials: "same-origin" });
+        if (r.status === 401) { await logout(); return; }
+        if (r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const serverIdle = Number(d?.idleTimeoutMs || 0);
+          if (Number.isFinite(serverIdle) && serverIdle >= 60 * 1000) idleTimeoutMs = serverIdle;
+        }
+      } catch {}
+      resetIdleDeadline();
+      touchSession(true);
+    }
+
+    function bindIdleSessionHandlers() {
+      const onActivity = () => {
+        const now = Date.now();
+        if (now - lastActivityEventTs < 1000) return;
+        lastActivityEventTs = now;
+        resetIdleDeadline();
+        touchSession(false);
+      };
+      ["pointerdown", "keydown", "touchstart", "mousedown", "wheel", "scroll"].forEach((evt) => {
+        window.addEventListener(evt, onActivity, { passive: true });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) onActivity();
+      });
+      setInterval(() => {
+        if (Date.now() >= idleDeadline) logout();
+      }, 1000);
+    }
+
+    async function refreshDevices() {
+      const r = await fetch("/api/devices");
+      if (!r.ok) { location.href = "/"; return; }
+      const data = await r.json();
+      devicesEl.innerHTML = "";
+      (data.devices || []).forEach((d) => {
+        const opt = document.createElement("option");
+        opt.value = d; opt.textContent = d;
+        if (d === data.selected) opt.selected = true;
+        devicesEl.appendChild(opt);
+      });
+
+      const list = data.devices || [];
+      const selected = data.selected || list[0] || null;
+      selectedDeviceId = selected;
+
+      if (showMulti && list.length > 1) {
+        multiRowEl.classList.remove("hidden");
+        openBtnSingleEl.classList.add("hidden");
+      } else {
+        multiRowEl.classList.add("hidden");
+        openBtnSingleEl.classList.toggle("hidden", !selected);
+      }
+
+      claimRowEl.classList.toggle("hidden", !!selected);
+      assignHintEl.classList.toggle("hidden", !!selected);
+      unclaimBtnEl.classList.toggle("hidden", !selected);
+
+      if (selected) {
+        deviceInfoEl.classList.remove("hidden");
+        deviceInfoEl.innerHTML = assignedDeviceHtml(selected);
+      } else {
+        deviceInfoEl.classList.add("hidden");
+        deviceInfoEl.innerHTML = "";
+      }
+    }
+
+    claimBtnEl.onclick = async () => {
+      const device_id = deviceIdEl.value.trim();
+      const r = await fetch("/api/devices/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_id })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) return setMsg(d.error || tr.claimError);
+      setMsg(tr.claimSuccess, true);
+      await refreshDevices();
+    };
+
+    selectBtnEl.onclick = async () => {
+      const device_id = devicesEl.value;
+      const r = await fetch("/api/devices/select", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_id })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) return setMsg(d.error || tr.selectError);
+      setMsg(tr.selectSuccess, true);
+    };
+
+    openBtnEl.onclick = () => location.href = "/app";
+    openBtnSingleEl.onclick = () => location.href = "/app";
+    unclaimBtnEl.onclick = async () => {
+      const selected = selectedDeviceId || devicesEl.value || "";
+      if (!selected) return setMsg(tr.noAssignedDevice);
+      if (!confirm(replaceTokens(tr.unclaimConfirm, { device: selected }))) return;
+      const r = await fetch("/api/devices/unclaim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_id: selected })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) return setMsg(d.error || tr.unclaimError);
+      setMsg(tr.unclaimSuccess, true);
+      await refreshDevices();
+      if (!selectedDeviceId) location.href = "/devices";
+    };
+
+    logoutBtnEl.onclick = logout;
+    bindIdleSessionHandlers();
+    primeIdleSession();
+    refreshDevices();
+  </script>
+</body>
+</html>
